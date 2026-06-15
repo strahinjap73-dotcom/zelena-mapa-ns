@@ -19,7 +19,7 @@ public class ZelenaMapaServis {
 
     // 📍 GET ALL LOCATIONS
     public List<Location> getAllLocations() {
-        return locationRepo.findAll();
+        return locationRepo.findByStatus("APPROVED");
     }
 
     // 📍 GET ONE LOCATION
@@ -64,5 +64,28 @@ public class ZelenaMapaServis {
                 .mapToInt(Rating::getRating)
                 .average()
                 .orElse(0.0);
+    }
+
+    public List<Location> getPending() {
+        return locationRepo.findByStatus("PENDING");
+    }
+
+
+    public Location approve(Long id) {
+
+        Location loc = locationRepo.findById(id).orElseThrow();
+
+        loc.setStatus("APPROVED");
+
+        return locationRepo.save(loc);
+    }
+
+    public Location reject(Long id) {
+
+        Location loc = locationRepo.findById(id).orElseThrow();
+
+        loc.setStatus("REJECTED");
+
+        return locationRepo.save(loc);
     }
 }

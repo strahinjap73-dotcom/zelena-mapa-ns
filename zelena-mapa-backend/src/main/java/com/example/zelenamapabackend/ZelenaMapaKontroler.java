@@ -60,4 +60,20 @@ public class ZelenaMapaKontroler {
     public double average(@PathVariable Long id) {
         return service.getAverageRating(id);
     }
+
+    @GetMapping("/admin/locations/pending")
+    public List<Location> getPending() {
+        return service.getPending();
+    }
+
+    @PutMapping("/admin/locations/{id}/approve")
+    public Location approve(@PathVariable Long id) {
+        return service.approve(id);
+    }
+
+    @PutMapping("/admin/locations/{id}/reject")
+    public Location reject(@PathVariable Long id) {
+
+        return service.reject(id);
+    }
 }
