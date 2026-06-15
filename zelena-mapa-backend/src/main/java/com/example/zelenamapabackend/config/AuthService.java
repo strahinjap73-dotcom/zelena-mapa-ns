@@ -36,6 +36,7 @@ public class AuthService {
 
         // 🔐 hash lozinke
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole("USER");
 
         userRepository.save(user);
 
@@ -55,7 +56,7 @@ public class AuthService {
             throw new RuntimeException("Wrong password");
         }
 
-        String token = jwtService.generateToken(user.getEmail());
+        String token = jwtService.generateToken(user.getEmail(), user.getRole());
 
         return new LoginResponse(
                 token,
