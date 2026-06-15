@@ -249,6 +249,7 @@ function App() {
   const [routeWarning, setRouteWarning] = useState(null);
   const [routeLoading, setRouteLoading] = useState(false);
   const [routeError, setRouteError] = useState(null);
+  const [showAdmin, setShowAdmin] = useState(false);
 
   const loadLocationsWithRatings = () => {
     getLocations()
@@ -384,6 +385,14 @@ function App() {
         >
           + Dodaj lokaciju
         </button>
+        {localStorage.getItem("role") === "ADMIN" && (
+  <button
+    style={{ marginLeft: "10px" }}
+    onClick={() => setShowAdmin(!showAdmin)}
+  >
+    Admin panel
+  </button>
+)}
 
         {isPickingLocation && (
           <div className="picking-hint">📍 Klikni na mapu da izabereš lokaciju</div>
@@ -517,7 +526,7 @@ function App() {
           </Marker>
         ))}
       </MapContainer>
-
+{showAdmin && <AdminPanel />}
       <AddLocationModal
         isOpen={isOpen}
         selectedPosition={selectedPosition}
