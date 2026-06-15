@@ -1,4 +1,9 @@
 const BASE_URL = "https://zelena-mapa-ns.onrender.com";
+const getToken = () => localStorage.getItem("token");
+
+const authHeader = () => ({
+  Authorization: `Bearer ${getToken()}`
+});
 
 export const getLocations = async () => {
   const res = await fetch(`${BASE_URL}/api`);
@@ -6,9 +11,12 @@ export const getLocations = async () => {
 };
 
 export const addLocation = async (location) => {
-  return fetch(`${BASE_URL}/api`, {
+  return fetch(`${BASE_URL}/api/location`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${getToken()}`
+    },
     body: JSON.stringify(location),
   });
 };
@@ -19,7 +27,7 @@ export const addRating = async (id, ratingData) => {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      "Authorization": `Bearer ${getToken()}`
     },
     body: JSON.stringify(value),
   });
@@ -63,3 +71,24 @@ export const register = (username, email, password) =>
     if (!res.ok) throw new Error("Registration failed");
     return res.text();
   });
+
+  export const approveLocation = async (id) => {
+  return fetch(`${BASE_URL}/admin/locations/${id}/approve`, {
+    method: "PUT",
+    headers: authHeader()
+  });
+};
+
+export const getPendingLocations = async () => {
+  const res = await fetch(`${BASE_URL}/admin/locations/pending`, {
+    headers: authHeader()
+  });
+  return res.json();
+};
+
+export const rejectLocation = async (id) => {
+  return fetch(`${BASE_URL}/admin/locations/${id}/reject`, {
+    method: "PUT",
+    headers: authHeader()
+  });
+};

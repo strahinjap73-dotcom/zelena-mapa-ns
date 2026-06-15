@@ -16,6 +16,7 @@ function LoginModal({ open, onClose, onLogin, onSwitchToRegister }) {
       localStorage.setItem("token", data.token);
       localStorage.setItem("username", data.username);
       localStorage.setItem("email", data.email);
+      localStorage.setItem("role", data.role);
 
       onLogin(data);
       setEmail("");
