@@ -19,7 +19,7 @@ export const addLocation = async (location) => {
     },
     body: JSON.stringify(location),
   });
-  alert("Lokacija je poslata na proveru i biće vidljiva nakon odobrenja.");
+  
 };
 
 export const addRating = async (id, ratingData) => {
@@ -84,7 +84,6 @@ export const getPendingLocations = async () => {
   const res = await fetch(`${BASE_URL}/api/admin/locations/pending`, {
     headers: authHeader()
   });
-  await loadLocations();
   return res.json();
 };
 
