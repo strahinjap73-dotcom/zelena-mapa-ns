@@ -554,6 +554,8 @@ function App() {
               setIsOpen(false);
               setSelectedPosition(null);
               loadLocationsWithRatings();
+
+               alert("Lokacija je poslata na proveru i biće vidljiva nakon odobrenja.");
             })
             .catch(console.error);
         }}
