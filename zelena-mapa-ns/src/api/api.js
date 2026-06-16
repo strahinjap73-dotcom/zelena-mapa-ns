@@ -73,21 +73,21 @@ export const register = (username, email, password) =>
   });
 
   export const approveLocation = async (id) => {
-  return fetch(`${BASE_URL}/admin/locations/${id}/approve`, {
+  return fetch(`${BASE_URL}/api/admin/locations/${id}/approve`, {
     method: "PUT",
     headers: authHeader()
   });
 };
 
 export const getPendingLocations = async () => {
-  const res = await fetch(`${BASE_URL}/admin/locations/pending`, {
+  const res = await fetch(`${BASE_URL}/api/admin/locations/pending`, {
     headers: authHeader()
   });
   return res.json();
 };
 
 export const rejectLocation = async (id) => {
-  return fetch(`${BASE_URL}/admin/locations/${id}/reject`, {
+  return fetch(`${BASE_URL}/api/admin/locations/${id}/reject`, {
     method: "PUT",
     headers: authHeader()
   });
