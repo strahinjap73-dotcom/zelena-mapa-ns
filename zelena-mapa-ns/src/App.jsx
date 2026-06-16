@@ -301,6 +301,7 @@ function App() {
     localStorage.removeItem("token");
     localStorage.removeItem("username");
     localStorage.removeItem("email");
+    localStorage.removeItem("role");
     setUsername(null);
   };
 
@@ -375,7 +376,7 @@ function App() {
 
         <h1>Zelena mapa Novog Sada</h1>
         <p>Interaktivna mapa ekoloških i zdravih lokacija u Novom Sadu</p>
-          {localStorage.getItem("role") === "ADMIN" && <AdminPanel />}
+          
         <button
           className="add-location-btn"
           onClick={() => {
