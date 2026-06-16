@@ -1,0 +1,486 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Nunito+Sans:wght@400;600;700&display=swap");
+
+:root {
+  --forest: #1b4332;
+  --leaf: #52b788;
+  --leaf-light: #d8f3dc;
+  --cream: #f4f1ea;
+  --sand: #d9cbb8;
+  --clay: #e76f51;
+  --clay-dark: #c75a3d;
+  --ink: #2d2a26;
+  --radius-lg: 18px;
+  --radius-md: 12px;
+  --shadow: 0 10px 30px rgba(27, 67, 50, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Nunito Sans", sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ---------- HEADER ---------- */
+.header {
+  position: relative;
+  background: linear-gradient(135deg, var(--forest), #2d6a4f);
+  color: var(--cream);
+  padding: 28px 32px 36px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  border-bottom-left-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+.header::before {
+  content: "🌿";
+  position: absolute;
+  top: 18px;
+  left: 28px;
+  font-size: 1.6rem;
+  opacity: 0.85;
+}
+
+.header h1 {
+  width: 100%;
+  font-family: "Fraunces", serif;
+  font-weight: 700;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  margin: 4px 0 2px;
+  letter-spacing: 0.5px;
+}
+
+.header p {
+  width: 100%;
+  margin: 0 0 10px;
+  font-size: 0.98rem;
+  color: var(--leaf-light);
+  font-weight: 400;
+}
+
+.header-auth {
+  position: absolute;
+  top: 18px;
+  right: 24px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.header-auth span {
+  font-size: 0.9rem;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+/* ---------- BUTTONS ---------- */
+button {
+  font-family: "Nunito Sans", sans-serif;
+  font-weight: 700;
+  font-size: 0.92rem;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+/* primary action - leaf */
+.header button,
+.btn-primary {
+  background: var(--leaf);
+  color: var(--forest);
+}
+
+.header button:hover,
+.btn-primary:hover {
+  background: #6fce9d;
+  box-shadow: 0 4px 14px rgba(82, 183, 136, 0.4);
+}
+
+/* secondary / outline (auth area) */
+.header-auth button {
+  background: transparent;
+  color: var(--cream);
+  border: 1.5px solid var(--leaf-light);
+  padding: 8px 18px;
+}
+
+.header-auth button:hover {
+  background: rgba(216, 243, 220, 0.15);
+}
+
+.header-auth .btn-logout {
+  background: var(--clay);
+  color: white;
+  border: none;
+}
+
+.header-auth .btn-logout:hover {
+  background: var(--clay-dark);
+}
+
+.add-location-btn {
+  background: var(--clay);
+  color: white;
+}
+
+.add-location-btn:hover {
+  background: var(--clay-dark);
+  box-shadow: 0 4px 14px rgba(231, 111, 81, 0.4);
+}
+
+/* ---------- MAP ---------- */
+.map {
+  flex: 1;
+  width: 100%;
+  min-height: 70vh;
+  margin-top: 16px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: var(--radius-md);
+  font-family: "Nunito Sans", sans-serif;
+}
+
+.leaflet-popup-content h3 {
+  margin: 0 0 4px;
+  font-family: "Fraunces", serif;
+  color: var(--forest);
+}
+
+.leaflet-popup-content p {
+  margin: 0;
+  color: var(--ink);
+}
+
+/* ---------- MODALS ---------- */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(27, 67, 50, 0.35);
+  backdrop-filter: blur(2px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.modal {
+  background: var(--cream);
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-lg);
+  padding: 28px 26px;
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--shadow);
+  position: relative;
+  animation: pop-in 0.18s ease-out;
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal h2 {
+  font-family: "Fraunces", serif;
+  color: var(--forest);
+  margin: 0 0 4px;
+  font-size: 1.5rem;
+}
+
+.modal::before {
+  content: "🌱";
+  position: absolute;
+  top: -14px;
+  left: -14px;
+  font-size: 1.8rem;
+  background: var(--leaf-light);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow);
+}
+
+.modal input {
+  font-family: "Nunito Sans", sans-serif;
+  font-size: 0.95rem;
+  padding: 11px 14px;
+  border: 1.5px solid var(--sand);
+  border-radius: var(--radius-md);
+  background: white;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.modal input::placeholder {
+  color: #a89c8c;
+}
+
+.modal input:focus {
+  border-color: var(--leaf);
+  box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.18);
+}
+
+.modal textarea {
+  font-family: "Nunito Sans", sans-serif;
+  font-size: 0.95rem;
+  padding: 11px 14px;
+  border: 1.5px solid var(--sand);
+  border-radius: var(--radius-md);
+  background: white;
+  color: var(--ink);
+  outline: none;
+  resize: vertical;
+  min-height: 70px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.modal textarea:focus {
+  border-color: var(--leaf);
+  box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.18);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.modal-actions button {
+  flex: 1;
+}
+
+.modal .btn-confirm {
+  background: var(--leaf);
+  color: var(--forest);
+}
+
+.modal .btn-confirm:hover {
+  background: #6fce9d;
+}
+
+.modal .btn-cancel {
+  background: transparent;
+  color: var(--ink);
+  border: 1.5px solid var(--sand);
+}
+
+.modal .btn-cancel:hover {
+  background: rgba(217, 203, 184, 0.3);
+}
+
+.modal-switch {
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--ink);
+  margin: 0;
+}
+
+.modal-switch button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--clay);
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.modal-error {
+  color: var(--clay-dark);
+  font-size: 0.85rem;
+  margin: -4px 0 0;
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .header {
+    padding: 60px 16px 24px;
+  }
+  .header-auth {
+    position: static;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .header::before {
+    top: 14px;
+  }
+  .map {
+    min-height: 60vh;
+  }
+}
+
+.picking-hint {
+  margin-top: 8px;
+  padding: 8px 16px;
+  background: #fff3cd;
+  border: 1px solid #ffeeba;
+  border-radius: 6px;
+  color: #856404;
+  font-weight: 500;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.picking-mode {
+  cursor: crosshair;
+}
+
+.selected-coords {
+  font-size: 0.9rem;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.rating-widget {
+  margin-top: 6px;
+}
+
+.rating-login-hint {
+  font-size: 0.85rem;
+  color: #888;
+  margin-top: 6px;
+}
+
+
+/* Banner koji se prikazuje tokom navigacije */
+.route-banner {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1100;
+  background: #1e293b;
+  color: #f1f5f9;
+  padding: 10px 20px;
+  border-radius: 0 0 12px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  max-width: 90vw;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.route-banner.success {
+  background: #14532d;
+  color: #bbf7d0;
+}
+
+.route-banner.warning {
+  background: #78350f;
+  color: #fde68a;
+}
+
+.route-banner.error {
+  background: #7f1d1d;
+  color: #fecaca;
+}
+
+.route-clear-btn {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: inherit;
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 13px;
+  margin-left: auto;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.route-clear-btn:hover {
+  background: rgba(255,255,255,0.28);
+}
+
+/* Dugme "Directions" u popupu */
+.directions-btn {
+  background: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.directions-btn:hover {
+  background: #1558b0;
+  transform: translateY(-1px);
+}
+
+/* Link za postavljanje odredišta */
+.directions-link {
+  color: #1a73e8;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* Mod za biranje odredišta — kursor */
+.map.selecting-b-mode {
+  cursor: crosshair !important;
+}
+
+/* Pulse animacija na markeru A (opciono) */
+@keyframes pulse-a {
+  0%   { box-shadow: 0 0 0 0 rgba(26,115,232,0.5); }
+  70%  { box-shadow: 0 0 0 10px rgba(26,115,232,0); }
+  100% { box-shadow: 0 0 0 0 rgba(26,115,232,0); }
+}
