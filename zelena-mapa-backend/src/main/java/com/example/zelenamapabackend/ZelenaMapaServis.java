@@ -30,6 +30,7 @@ public class ZelenaMapaServis {
 
     // ➕ ADD LOCATION
     public Location addLocation(Location location) {
+        location.setStatus("PENDING");
         return locationRepo.save(location);
     }
 
