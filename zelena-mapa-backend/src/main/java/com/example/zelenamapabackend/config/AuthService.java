@@ -56,15 +56,15 @@ public class AuthService {
             throw new RuntimeException("Wrong password");
         }
 
-        System.out.println("Role iz user objekta = [" + user.getRole() + "]");
-        String token = jwtService.generateToken(user.getEmail(), user.getRole());
+        String role = user.getRole();
+        String token = jwtService.generateToken(user.getEmail(), role);
 
 
         return new LoginResponse(
                 token,
                 user.getUsername(),
                 user.getEmail(),
-                "ADMIN"
+                role
         );
     }
 }
