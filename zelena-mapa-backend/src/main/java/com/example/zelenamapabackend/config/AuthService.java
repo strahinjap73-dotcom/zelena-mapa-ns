@@ -63,7 +63,7 @@ public class AuthService {
                 token,
                 user.getUsername(),
                 user.getEmail(),
-                user.getRole()
+                "ADMIN"
         );
     }
 }
