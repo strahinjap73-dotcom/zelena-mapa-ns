@@ -56,6 +56,7 @@ public class AuthService {
             throw new RuntimeException("Wrong password");
         }
 
+        System.out.println("Role iz user objekta = [" + user.getRole() + "]");
         String token = jwtService.generateToken(user.getEmail(), user.getRole());
 
 
