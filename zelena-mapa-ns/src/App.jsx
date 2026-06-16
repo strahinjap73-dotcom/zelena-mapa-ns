@@ -527,7 +527,7 @@ function App() {
           </Marker>
         ))}
       </MapContainer>
-{showAdmin && <AdminPanel />}
+{showAdmin && <AdminPanel onUpdate={loadLocationsWithRatings}/>}
       <AddLocationModal
         isOpen={isOpen}
         selectedPosition={selectedPosition}
@@ -554,8 +554,7 @@ function App() {
               setIsOpen(false);
               setSelectedPosition(null);
               loadLocationsWithRatings();
-
-               alert("Lokacija je poslata na proveru i biće vidljiva nakon odobrenja.");
+              alert("Lokacija je poslata na proveru i biće prikazana na mapi kada bude bila odobrena.")
             })
             .catch(console.error);
         }}

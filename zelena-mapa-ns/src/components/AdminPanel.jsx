@@ -5,7 +5,7 @@ import {
   rejectLocation
 } from "../api/api";
 
-function AdminPanel() {
+function AdminPanel({ onUpdate }) {
   const [locations, setLocations] = useState([]);
 
   const load = async () => {
@@ -19,6 +19,7 @@ function AdminPanel() {
 
   const handleApprove = async (id) => {
     await approveLocation(id);
+    await onUpdate();
     load();
   };
 

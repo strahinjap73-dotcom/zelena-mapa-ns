@@ -19,7 +19,6 @@ export const addLocation = async (location) => {
     },
     body: JSON.stringify(location),
   });
-  
 };
 
 export const addRating = async (id, ratingData) => {
