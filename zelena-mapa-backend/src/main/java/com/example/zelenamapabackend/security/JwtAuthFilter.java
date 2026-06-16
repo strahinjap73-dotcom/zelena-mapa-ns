@@ -61,21 +61,18 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String header = request.getHeader("Authorization");
 
-        // 1. Ako nema tokena, pusti dalje
+
         if (header == null || !header.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
-            // 2. Uzmi token
             String token = header.substring(7);
 
-            // 3. Izvuci podatke iz tokena
             String email = jwtService.extractEmail(token);
             String role = jwtService.extractRole(token);
 
-            // 4. Napravi auth objekat
             UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(
                             email,
@@ -83,7 +80,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                             List.of(new SimpleGrantedAuthority("ROLE_" + role))
                     );
 
-            // 5. Setuj security context
+
             SecurityContextHolder.getContext().setAuthentication(auth);
 
         } catch (Exception e) {
@@ -91,7 +88,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             SecurityContextHolder.clearContext();
         }
 
-        // 6. OBAVEZNO nastavi filter chain
+
         filterChain.doFilter(request, response);
     }
 }
