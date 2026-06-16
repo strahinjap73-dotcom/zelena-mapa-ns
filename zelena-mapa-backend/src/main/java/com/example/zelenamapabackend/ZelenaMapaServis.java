@@ -30,8 +30,16 @@ public class ZelenaMapaServis {
 
     // ➕ ADD LOCATION
     public Location addLocation(Location location) {
-        location.setStatus("PENDING");
-        return locationRepo.save(location);
+        Location newLocation = new Location();
+
+        newLocation.setName(location.getName());
+        newLocation.setDescription(location.getDescription());
+        newLocation.setLat(location.getLat());
+        newLocation.setLng(location.getLng());
+
+        newLocation.setStatus("PENDING");
+
+        return locationRepo.save(newLocation);
     }
 
     // ❌ DELETE LOCATION
