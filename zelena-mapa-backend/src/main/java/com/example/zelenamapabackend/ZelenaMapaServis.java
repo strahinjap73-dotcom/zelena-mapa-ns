@@ -37,7 +37,7 @@ public class ZelenaMapaServis {
         newLocation.setLat(location.getLat());
         newLocation.setLng(location.getLng());
 
-        newLocation.setStatus("PENDING");
+        newLocation.setStatus("APPROVED");
 
         return locationRepo.save(newLocation);
     }
