@@ -386,14 +386,18 @@ function App() {
         >
           + Dodaj lokaciju
         </button>
+        {/*
         {localStorage.getItem("role") === "ADMIN" && (
+  
   <button
     style={{ marginLeft: "10px" }}
     onClick={() => setShowAdmin(!showAdmin)}
   >
     Admin panel
   </button>
+  
 )}
+*/}
 
         {isPickingLocation && (
           <div className="picking-hint">📍 Klikni na mapu da izabereš lokaciju</div>
