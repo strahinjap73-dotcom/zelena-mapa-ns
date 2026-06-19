@@ -13,6 +13,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { toast } from "react-toastify";
 
+
 delete L.Icon.Default.prototype._getIconUrl;
 
 L.Icon.Default.mergeOptions({
@@ -256,9 +257,11 @@ function App() {
 
   //Strahinja, pretraga po nazivu
   const [search, setSearch] = useState("");
-
+  //Strahinja, loading
+  const [loading, setLoading] = useState(false);
 
   const loadLocationsWithRatings = () => {
+    setLoading(true);
     getLocations()
       .then(async (locs) => {
         const withRatings = await Promise.all(
@@ -268,12 +271,15 @@ function App() {
               return { ...loc, averageRating: avgData.average ?? 0 };
             } catch (err) {
               return { ...loc, averageRating: 0 };
+            }finally{
+              setLoading(false);
             }
           })
         );
         setLocations(withRatings);
       })
       .catch(console.error);
+      
   };
 
   useEffect(() => {
@@ -370,6 +376,18 @@ function App() {
   const filteredLocations = locations.filter((location) =>
   location.name.toLowerCase().includes(search.toLowerCase())
 );
+
+      function App() {
+  const [loading, setLoading] = useState(true);
+
+  if (loading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", marginTop: 50 }}>
+        <div className="spinner"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="app">
       <header className="header">
@@ -603,8 +621,13 @@ function App() {
         }}
       />
       <ToastContainer />
+      
     </div>
   );
+}
+
+
+  
 }
 
 export default App;
