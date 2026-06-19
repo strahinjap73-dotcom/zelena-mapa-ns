@@ -377,257 +377,289 @@ function App() {
   location.name.toLowerCase().includes(search.toLowerCase())
 );
 
-      function App() {
-  const [loading, setLoading] = useState(true);
 
-  if (loading) {
-    return (
+
+  return (
+  <>
+    {loading ? (
       <div style={{ display: "flex", justifyContent: "center", marginTop: 50 }}>
         <div className="spinner"></div>
       </div>
-    );
-  }
+    ) : (
+      <div className="app">
+        <header className="header">
+          <div className="header-auth">
+            <input
+              type="text"
+              placeholder="Pretraži po nazivu..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            {username ? (
+              <>
+                <span>Prijavljen: {username}</span>
+                <button className="btn-logout" onClick={handleLogout}>
+                  Odjava
+                </button>
+              </>
+            ) : (
+              <>
+                <button onClick={() => setShowLogin(true)}>Prijava</button>
+                <button onClick={() => setShowRegister(true)}>Registracija</button>
+              </>
+            )}
+          </div>
 
-  return (
-    <div className="app">
-      <header className="header">
-        <div className="header-auth">
-          <input
-            type="text"
-            placeholder="Pretraži po nazivu..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          {username ? (
-            <>
-              <span>Prijavljen: {username}</span>
-              <button className="btn-logout" onClick={handleLogout}>Odjava</button>
-            </>
-          ) : (
-            <>
-              <button onClick={() => setShowLogin(true)}>Prijava</button>
-              <button onClick={() => setShowRegister(true)}>Registracija</button>
-            </>
+          <h1>Zelena mapa Novog Sada</h1>
+          <p>Interaktivna mapa ekoloških i zdravih lokacija u Novom Sadu</p>
+
+          <button
+            className="add-location-btn"
+            onClick={() => {
+              setIsPickingLocation(true);
+              setSelectedPosition(null);
+            }}
+          >
+            + Dodaj lokaciju
+          </button>
+
+          {localStorage.getItem("role") === "ADMIN" && (
+            <button
+              style={{ marginLeft: "10px" }}
+              onClick={() => setShowAdmin(!showAdmin)}
+            >
+              Admin panel
+            </button>
           )}
-        </div>
 
-        <h1>Zelena mapa Novog Sada</h1>
-        <p>Interaktivna mapa ekoloških i zdravih lokacija u Novom Sadu</p>
-          
-        <button
-          className="add-location-btn"
-          onClick={() => {
-            setIsPickingLocation(true);
+          {isPickingLocation && (
+            <div className="picking-hint">
+              📍 Klikni na mapu da izabereš lokaciju
+            </div>
+          )}
+        </header>
+
+        {(directionsMode === "selectB" ||
+          routeLoading ||
+          routeWarning ||
+          routeError ||
+          routeCoords.length > 0) && (
+          <div
+            className={`route-banner ${
+              routeWarning
+                ? "warning"
+                : routeError
+                ? "error"
+                : routeCoords.length > 0 && routeSafe
+                ? "success"
+                : ""
+            }`}
+          >
+            {directionsMode === "selectB" && !routeLoading && (
+              <span>
+                📍 Polazna: <strong>{routeFrom?.name}</strong> — Klikni na
+                odredišnu lokaciju (B)
+              </span>
+            )}
+            {routeLoading && <span>🔄 Računam bezbednu rutu...</span>}
+            {!routeLoading &&
+              routeCoords.length > 0 &&
+              !routeWarning &&
+              !routeError && (
+                <span>
+                  ✅ Bezbedna ruta: <strong>{routeFrom?.name}</strong> →{" "}
+                  <strong>{routeTo?.name}</strong>
+                </span>
+              )}
+            {routeWarning && <span>⚠️ {routeWarning}</span>}
+            {routeError && <span>❌ {routeError}</span>}
+            <button className="route-clear-btn" onClick={clearRoute}>
+              ✕ Obriši rutu
+            </button>
+          </div>
+        )}
+
+        <MapContainer
+          center={[45.2671, 19.8335]}
+          zoom={13}
+          scrollWheelZoom={true}
+          className={`map ${
+            isPickingLocation ? "picking-mode" : ""
+          } ${directionsMode === "selectB" ? "selecting-b-mode" : ""}`}
+        >
+          <MapClickHandler
+            isPickingLocation={isPickingLocation}
+            setSelectedPosition={setSelectedPosition}
+            setIsPickingLocation={setIsPickingLocation}
+            setIsOpen={setIsOpen}
+          />
+
+          {selectedPosition && (
+            <Marker position={[selectedPosition.lat, selectedPosition.lng]} />
+          )}
+
+          <TileLayer
+            attribution="&copy; OpenStreetMap contributors"
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+
+          {routeCoords.length > 0 &&
+            badLocations.map((loc) => (
+              <Circle
+                key={`zone-${loc.id}`}
+                center={[loc.lat, loc.lng]}
+                radius={250}
+                pathOptions={{
+                  color: "#ef4444",
+                  fillColor: "#ef4444",
+                  fillOpacity: 0.08,
+                  weight: 1,
+                  dashArray: "6, 4",
+                }}
+              />
+            ))}
+
+          <RouteLayer routeCoords={routeCoords} safe={routeSafe} />
+
+          {filteredLocations.map((loc) => (
+            <Marker
+              key={loc.id}
+              position={[loc.lat, loc.lng]}
+              icon={getMarkerIcon(loc)}
+              eventHandlers={
+                directionsMode === "selectB"
+                  ? { click: () => handleSelectB(loc) }
+                  : {}
+              }
+            >
+              {directionsMode !== "selectB" && (
+                <Popup>
+                  <h3>{loc.name}</h3>
+                  <p>{loc.description}</p>
+                  <p>
+                    Prosečna ocena:{" "}
+                    {loc.averageRating
+                      ? loc.averageRating.toFixed(1)
+                      : "0"}
+                  </p>
+
+                  {username ? (
+                    ratedLocations.includes(loc.id) ? (
+                      <p style={{ color: "green", fontSize: "0.9em", fontWeight: "bold" }}>
+                        ✓ Već ste ostavili recenziju.
+                      </p>
+                    ) : (
+                      <RatingWidget
+                        locationId={loc.id}
+                        username={username}
+                        onRated={() => handleLocationRated(loc.id)}
+                      />
+                    )
+                  ) : (
+                    <p
+                      style={{
+                        color: "gray",
+                        fontSize: "0.9em",
+                        fontStyle: "italic",
+                      }}
+                    >
+                      (Morate biti prijavljeni da biste ocenili lokaciju)
+                    </p>
+                  )}
+
+                  <hr style={{ margin: "8px 0" }} />
+
+                  <button
+                    className="directions-btn"
+                    onClick={() => handleDirectionsClick(loc)}
+                  >
+                    Directions
+                  </button>
+
+                  {routeFrom && routeFrom.id !== loc.id && (
+                    <div style={{ marginTop: 6, fontSize: 12, color: "#555" }}>
+                      ili{" "}
+                      <span
+                        className="directions-link"
+                        onClick={() => handleSelectB(loc)}
+                      >
+                        postavi kao odredište od "{routeFrom.name}"
+                      </span>
+                    </div>
+                  )}
+                </Popup>
+              )}
+            </Marker>
+          ))}
+        </MapContainer>
+
+        {showAdmin && (
+          <AdminPanel onUpdate={loadLocationsWithRatings} />
+        )}
+
+        <AddLocationModal
+          isOpen={isOpen}
+          selectedPosition={selectedPosition}
+          onClose={() => {
+            setIsOpen(false);
             setSelectedPosition(null);
           }}
-        >
-          + Dodaj lokaciju
-        </button>
-        
-        {localStorage.getItem("role") === "ADMIN" && (
-  
-  <button
-    style={{ marginLeft: "10px" }}
-    onClick={() => setShowAdmin(!showAdmin)}
-  >
-    Admin panel
-  </button>
-  
-)}
-
-
-        {isPickingLocation && (
-          <div className="picking-hint">📍 Klikni na mapu da izabereš lokaciju</div>
-        )}
-      </header>
-
-      {(directionsMode === "selectB" || routeLoading || routeWarning || routeError || routeCoords.length > 0) && (
-        <div className={`route-banner ${routeWarning ? "warning" : routeError ? "error" : routeCoords.length > 0 && routeSafe ? "success" : ""}`}>
-          {directionsMode === "selectB" && !routeLoading && (
-            <span>
-              📍 Polazna: <strong>{routeFrom?.name}</strong> — Klikni na odredišnu lokaciju (B)
-            </span>
-          )}
-          {routeLoading && <span>🔄 Računam bezbednu rutu...</span>}
-          {!routeLoading && routeCoords.length > 0 && !routeWarning && !routeError && (
-            <span>
-              ✅ Bezbedna ruta: <strong>{routeFrom?.name}</strong> → <strong>{routeTo?.name}</strong>
-            </span>
-          )}
-          {routeWarning && (
-            <span>⚠️ {routeWarning}</span>
-          )}
-          {routeError && <span>❌ {routeError}</span>}
-          <button className="route-clear-btn" onClick={clearRoute}>✕ Obriši rutu</button>
-        </div>
-      )}
-
-      <MapContainer
-        center={[45.2671, 19.8335]}
-        zoom={13}
-        scrollWheelZoom={true}
-        className={`map ${isPickingLocation ? "picking-mode" : ""} ${directionsMode === "selectB" ? "selecting-b-mode" : ""}`}
-      >
-        <MapClickHandler
-          isPickingLocation={isPickingLocation}
-          setSelectedPosition={setSelectedPosition}
-          setIsPickingLocation={setIsPickingLocation}
-          setIsOpen={setIsOpen}
-        />
-
-        {selectedPosition && (
-          <Marker position={[selectedPosition.lat, selectedPosition.lng]} />
-        )}
-
-        <TileLayer
-          attribution="&copy; OpenStreetMap contributors"
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-
-        {routeCoords.length > 0 && badLocations.map((loc) => (
-          <Circle
-            key={`zone-${loc.id}`}
-            center={[loc.lat, loc.lng]}
-            radius={250}
-            pathOptions={{
-              color: "#ef4444",
-              fillColor: "#ef4444",
-              fillOpacity: 0.08,
-              weight: 1,
-              dashArray: "6, 4",
-            }}
-          />
-        ))}
-
-        <RouteLayer routeCoords={routeCoords} safe={routeSafe} />
-
-        {filteredLocations.map((loc) => (
-          <Marker
-            key={loc.id}
-            position={[loc.lat, loc.lng]}
-            icon={getMarkerIcon(loc)}
-            eventHandlers={
-              directionsMode === "selectB"
-                ? {
-                    click: () => handleSelectB(loc),
-                  }
-                : {}
+          onSave={(newLocation) => {
+            if (!newLocation.name || !selectedPosition) {
+              alert("Greška: nedostaje lokacija ili naziv");
+              return;
             }
-          >
-            {directionsMode !== "selectB" && (
-              <Popup>
-                <h3>{loc.name}</h3>
-                <p>{loc.description}</p>
-                <p>
-                  Prosečna ocena:{" "}
-                  {loc.averageRating ? loc.averageRating.toFixed(1) : "0"}
-                </p>
-                
-                {/* NOVO: Uslovno renderovanje widgeta za ocenu */}
-                {username ? (
-                  ratedLocations.includes(loc.id) ? (
-                    // Ako je korisnik ulogovan i JESTE već ocenio ovu lokaciju, ispiši poruku
-                    <p style={{ color: "green", fontSize: "0.9em", fontWeight: "bold" }}>
-                      ✓ Već ste ostavili recenziju.
-                    </p>
-                  ) : (
-                    // Ako je ulogovan, ali NIJE ocenio ovu lokaciju, prikaži widget i veži novu funkciju
-                    <RatingWidget
-                      locationId={loc.id}
-                      username={username}
-                      onRated={() => handleLocationRated(loc.id)}
-                    />
-                  )
-                ) : (
-                  // Ako uopšte nije ulogovan, neka zna šta treba da uradi
-                  <p style={{ color: "gray", fontSize: "0.9em", fontStyle: "italic" }}>
-                    (Morate biti prijavljeni da biste ocenili lokaciju)
-                  </p>
-                )}
 
-                <hr style={{ margin: "8px 0" }} />
-                <button
-                  className="directions-btn"
-                  onClick={() => handleDirectionsClick(loc)}
-                >
-                  Directions
-                </button>
-                {routeFrom && routeFrom.id !== loc.id && (
-                  <div style={{ marginTop: 6, fontSize: 12, color: "#555" }}>
-                    ili{" "}
-                    <span
-                      className="directions-link"
-                      onClick={() => handleSelectB(loc)}
-                    >
-                      postavi kao odredište od "{routeFrom.name}"
-                    </span>
-                  </div>
-                )}
-              </Popup>
-            )}
-          </Marker>
-        ))}
-      </MapContainer>
-{showAdmin && <AdminPanel onUpdate={loadLocationsWithRatings}/>}
-      <AddLocationModal
-        isOpen={isOpen}
-        selectedPosition={selectedPosition}
-        onClose={() => {
-          setIsOpen(false);
-          setSelectedPosition(null);
-        }}
-        onSave={(newLocation) => {
-          if (!newLocation.name || !selectedPosition) {
-            alert("Greška: nedostaje lokacija ili naziv");
-            return;
-          }
-          const locationToSend = {
-            ...newLocation,
-            lat: selectedPosition.lat,
-            lng: selectedPosition.lng,
-          };
-          fetch("https://zelena-mapa-ns.onrender.com/api", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(locationToSend),
-          })
-            .then(() => {
-              setIsOpen(false);
-              setSelectedPosition(null);
-              loadLocationsWithRatings();
-              alert("Lokacija je poslata na proveru i biće prikazana na mapi kada bude bila odobrena.")
+            const locationToSend = {
+              ...newLocation,
+              lat: selectedPosition.lat,
+              lng: selectedPosition.lng,
+            };
+
+            fetch("https://zelena-mapa-ns.onrender.com/api", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(locationToSend),
             })
-            .catch(console.error);
-        }}
-      />
+              .then(() => {
+                setIsOpen(false);
+                setSelectedPosition(null);
+                loadLocationsWithRatings();
+                alert(
+                  "Lokacija je poslata na proveru i biće prikazana na mapi kada bude bila odobrena."
+                );
+              })
+              .catch(console.error);
+          }}
+        />
 
-      <LoginModal
-        open={showLogin}
-        onClose={() => setShowLogin(false)}
-        onLogin={(data) => setUsername(data.username)}
-        onSwitchToRegister={() => {
-          setShowLogin(false);
-          setShowRegister(true);
-        }}
-      />
+        <LoginModal
+          open={showLogin}
+          onClose={() => setShowLogin(false)}
+          onLogin={(data) => setUsername(data.username)}
+          onSwitchToRegister={() => {
+            setShowLogin(false);
+            setShowRegister(true);
+          }}
+        />
 
-      <RegisterModal
-        open={showRegister}
-        onClose={() => setShowRegister(false)}
-        onRegister={(user) => register(user.username, user.email, user.password)}
-        onSwitchToLogin={() => {
-          setShowRegister(false);
-          setShowLogin(true);
-        }}
-      />
-      <ToastContainer />
-      
-    </div>
-  );
-}
+        <RegisterModal
+          open={showRegister}
+          onClose={() => setShowRegister(false)}
+          onRegister={(user) =>
+            register(user.username, user.email, user.password)
+          }
+          onSwitchToLogin={() => {
+            setShowRegister(false);
+            setShowLogin(true);
+          }}
+        />
 
-
-  
+        <ToastContainer />
+      </div>
+    )}
+  </>
+);
 }
 
 export default App;
