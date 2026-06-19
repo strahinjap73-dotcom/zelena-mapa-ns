@@ -251,6 +251,10 @@ function App() {
   const [routeError, setRouteError] = useState(null);
   const [showAdmin, setShowAdmin] = useState(false);
 
+  //Strahinja, pretraga po nazivu
+  const [search, setSearch] = useState("");
+
+
   const loadLocationsWithRatings = () => {
     getLocations()
       .then(async (locs) => {
@@ -357,10 +361,20 @@ function App() {
 
   const badLocations = locations.filter((l) => l.averageRating > 0 && l.averageRating <= 3);
 
+
+  const filteredLocations = locations.filter((location) =>
+  location.name.toLowerCase().includes(search.toLowerCase())
+);
   return (
     <div className="app">
       <header className="header">
         <div className="header-auth">
+          <input
+            type="text"
+            placeholder="Pretraži po nazivu..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
           {username ? (
             <>
               <span>Prijavljen: {username}</span>
@@ -386,7 +400,7 @@ function App() {
         >
           + Dodaj lokaciju
         </button>
-        {/*
+        
         {localStorage.getItem("role") === "ADMIN" && (
   
   <button
@@ -397,7 +411,7 @@ function App() {
   </button>
   
 )}
-*/}
+
 
         {isPickingLocation && (
           <div className="picking-hint">📍 Klikni na mapu da izabereš lokaciju</div>
@@ -464,7 +478,7 @@ function App() {
 
         <RouteLayer routeCoords={routeCoords} safe={routeSafe} />
 
-        {locations.map((loc) => (
+        {filteredLocations.map((loc) => (
           <Marker
             key={loc.id}
             position={[loc.lat, loc.lng]}
