@@ -377,7 +377,23 @@ function App() {
   location.name.toLowerCase().includes(search.toLowerCase())
 );
 
+const handleDeleteLocation = async (id) => {
+  const confirmed = window.confirm("Da li si siguran da želiš da obrišeš ovu lokaciju?");
 
+  if (!confirmed) return;
+
+  try {
+    await fetch(`https://zelena-mapa-ns.onrender.com/api/${id}`, {
+      method: "DELETE",
+    });
+
+    loadLocationsWithRatings(); // refresh mape
+    toast.success("Lokacija obrisana!");
+  } catch (err) {
+    console.error(err);
+    toast.error("Greška pri brisanju!");
+  }
+};
 
   return (
   <>
@@ -587,6 +603,22 @@ function App() {
                       </span>
                     </div>
                   )}
+                  {localStorage.getItem("role") === "ADMIN" && (
+  <button
+    className="delete-btn"
+    style={{
+      marginTop: "8px",
+      background: "red",
+      color: "white",
+      border: "none",
+      padding: "5px 10px",
+      cursor: "pointer",
+    }}
+    onClick={() => handleDeleteLocation(loc.id)}
+  >
+    🗑 Obriši lokaciju
+  </button>
+)}
                 </Popup>
               )}
             </Marker>
