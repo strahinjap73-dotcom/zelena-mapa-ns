@@ -19,6 +19,7 @@ export const addLocation = async (location) => {
     },
     body: JSON.stringify(location),
   });
+  
 };
 
 export const addRating = async (id, ratingData) => {
@@ -77,6 +78,7 @@ export const register = (username, email, password) =>
     method: "PUT",
     headers: authHeader()
   });
+  
 };
 
 export const getPendingLocations = async () => {

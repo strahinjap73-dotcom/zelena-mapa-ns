@@ -9,6 +9,9 @@ import LoginModal from "./components/LoginModal";
 import RegisterModal from "./components/RegisterModal";
 import RatingWidget from "./components/RatingWidget";
 import AdminPanel from "./components/AdminPanel";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -291,6 +294,7 @@ function App() {
   // NOVO: Funkcija koja beleži da je korisnik uspešno ocenio lokaciju
   const handleLocationRated = (locId) => {
     // 1. Osvježava prosečne ocene sa servera
+    toast.success("Uspešno ocenjeno!");
     loadLocationsWithRatings();
     
     // 2. Upisuje u memoriju pregledača da je ovaj korisnik glasao za ovu lokaciju
@@ -306,6 +310,7 @@ function App() {
     localStorage.removeItem("username");
     localStorage.removeItem("email");
     localStorage.removeItem("role");
+    toast.success("Uspešan logout!");
     setUsername(null);
   };
 
@@ -597,6 +602,7 @@ function App() {
           setShowLogin(true);
         }}
       />
+      <ToastContainer />
     </div>
   );
 }

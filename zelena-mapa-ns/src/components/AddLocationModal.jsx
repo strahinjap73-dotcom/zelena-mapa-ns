@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 function AddLocationModal({ isOpen, onClose, onSave, selectedPosition }) {
   const [form, setForm] = useState({
@@ -14,6 +15,7 @@ function AddLocationModal({ isOpen, onClose, onSave, selectedPosition }) {
 
   const handleSubmit = () => {
     onSave(form);
+    toast.success("Uspešno sačuvano!");
     setForm({ name: "", description: "" });
   };
 
