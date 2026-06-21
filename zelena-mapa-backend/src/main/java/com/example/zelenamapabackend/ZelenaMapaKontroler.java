@@ -88,7 +88,7 @@ public class ZelenaMapaKontroler {
         return service.upload(locationId, file);
     }
 
-    @GetMapping("/{locationId}")
+    @GetMapping("/images/{locationId}")
     public List<LocationImage> getImages(
             @PathVariable Long locationId) {
 
