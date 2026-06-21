@@ -94,3 +94,41 @@ export const rejectLocation = async (id) => {
     headers: authHeader()
   });
 };
+
+export const uploadLocationImage = async (
+  locationId,
+  file
+) => {
+
+  const formData = new FormData();
+
+  formData.append("locationId", locationId);
+  formData.append("file", file);
+
+  const response = await fetch(
+    `${BASE_URL}/api/images`,
+    {
+      method: "POST",
+      headers: {
+        Authorization:
+          "Bearer " +
+          localStorage.getItem("token")
+      },
+      body: formData
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Upload failed");
+
+export const getLocationImages = async (locationId) => {
+  const res = await fetch(
+    `${BASE_URL}/api/images/${locationId}`
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to load images");
+  }
+
+  return res.json();
+};

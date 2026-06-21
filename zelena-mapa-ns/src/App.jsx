@@ -255,10 +255,26 @@ function App() {
   const [routeError, setRouteError] = useState(null);
   const [showAdmin, setShowAdmin] = useState(false);
 
+  //Strahinja, state za izbor slike za upload
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  //Strahinja, sve slike za odredjenu lokaciju
+  const [imagesByLocation, setImagesByLocation] = useState({});
+
   //Strahinja, pretraga po nazivu
   const [search, setSearch] = useState("");
   //Strahinja, loading
   const [loading, setLoading] = useState(false);
+
+//Strahinja, ucitavanje svih slika za lokaciju sa loactionId  
+const loadImages = async (locationId) => {
+  const images = await getLocationImages(locationId);
+
+  setImagesByLocation((prev) => ({
+    ...prev,
+    [locationId]: images,
+  }));
+};
 
   const loadLocationsWithRatings = () => {
     setLoading(true);
@@ -549,7 +565,10 @@ const handleDeleteLocation = async (id) => {
               }
             >
               {directionsMode !== "selectB" && (
-                <Popup>
+                <Popup
+                 eventHandlers={{
+    popupopen: () => loadImages(loc.id),
+  }}>
                   <h3>{loc.name}</h3>
                   <p>{loc.description}</p>
                   <p>
@@ -627,6 +646,28 @@ const handleDeleteLocation = async (id) => {
   >
     🗑 Obriši lokaciju
   </button>
+)}
+
+<div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
+  {imagesByLocation[loc.id]?.map((img) => (
+    <img
+      key={img.id}
+      src={img.imageUrl}
+      alt=""
+      style={{
+        width: "60px",
+        height: "60px",
+        objectFit: "cover",
+        borderRadius: "6px"
+      }}
+    />
+  ))}
+</div>
+
+{imagesByLocation[loc.id]?.length === 0 && (
+  <p style={{ fontSize: "12px", color: "gray" }}>
+    Nema slika za ovu lokaciju
+  </p>
 )}
                 </Popup>
               )}
