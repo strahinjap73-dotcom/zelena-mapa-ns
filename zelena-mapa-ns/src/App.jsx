@@ -558,6 +558,15 @@ const handleDeleteLocation = async (id) => {
                       ? loc.averageRating.toFixed(1)
                       : "0"}
                   </p>
+                  <input
+  type="file"
+  accept="image/*"
+  onChange={(e) => setSelectedFile(e.target.files[0])}
+/>
+
+<button onClick={() => uploadImage(loc.id)}>
+  Dodaj sliku
+</button>
 
                   {username ? (
                     ratedLocations.includes(loc.id) ? (
