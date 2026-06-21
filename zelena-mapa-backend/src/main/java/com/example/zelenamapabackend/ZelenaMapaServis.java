@@ -1,10 +1,17 @@
 package com.example.zelenamapabackend;
 
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
+import com.example.zelenamapabackend.repository.LocationImageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ZelenaMapaServis {
@@ -12,9 +19,14 @@ public class ZelenaMapaServis {
     private final LocationRepository locationRepo;
     private final RatingRepository ratingRepo;
 
-    public ZelenaMapaServis(LocationRepository locationRepo, RatingRepository ratingRepo) {
+    private final Cloudinary cloudinary;
+    private final LocationImageRepository imageRepository;
+
+    public ZelenaMapaServis(LocationRepository locationRepo, RatingRepository ratingRepo, Cloudinary cloudinary, LocationImageRepository imageRepository) {
         this.locationRepo = locationRepo;
         this.ratingRepo = ratingRepo;
+        this.cloudinary = cloudinary;
+        this.imageRepository = imageRepository;
     }
 
     // 📍 GET ALL LOCATIONS
@@ -96,5 +108,36 @@ public class ZelenaMapaServis {
         loc.setStatus("REJECTED");
 
         return locationRepo.save(loc);
+    }
+
+    public LocationImage upload(
+            Long locationId,
+            MultipartFile file)
+            throws IOException {
+
+        Location location =
+                locationRepo.findById(locationId)
+                        .orElseThrow();
+
+        Map uploadResult =
+                cloudinary.uploader().upload(
+                        file.getBytes(),
+                        ObjectUtils.emptyMap()
+                );
+
+        String imageUrl =
+                uploadResult.get("secure_url").toString();
+
+        LocationImage image = new LocationImage();
+        image.setLocation(location);
+        image.setImageUrl(imageUrl);
+
+        return imageRepository.save(image);
+    }
+
+    public List<LocationImage> pronadjiSlikeZaLokaciju(
+            @PathVariable Long locationId) {
+        return imageRepository.findByLocationId(locationId);
+
     }
 }

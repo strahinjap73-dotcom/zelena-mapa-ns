@@ -2,7 +2,9 @@ package com.example.zelenamapabackend;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -75,5 +77,21 @@ public class ZelenaMapaKontroler {
     public Location reject(@PathVariable Long id) {
 
         return service.reject(id);
+    }
+
+    @PostMapping("/images")
+    public LocationImage upload(
+            @RequestParam Long locationId,
+            @RequestParam MultipartFile file)
+            throws IOException {
+
+        return service.upload(locationId, file);
+    }
+
+    @GetMapping("/{locationId}")
+    public List<LocationImage> getImages(
+            @PathVariable Long locationId) {
+
+        return service.pronadjiSlikeZaLokaciju(locationId);
     }
 }
