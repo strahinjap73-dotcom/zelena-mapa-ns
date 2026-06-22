@@ -3,7 +3,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useEffect, useState, useRef } from "react";
 import "./App.css";
-import { getLocations, getAverageRating, login, register } from "./api/api";
+import { getLocations, getAverageRating, login, register, uploadLocationImage } from "./api/api";
 import AddLocationModal from "./components/AddLocationModal";
 import LoginModal from "./components/LoginModal";
 import RegisterModal from "./components/RegisterModal";
@@ -274,6 +274,28 @@ const loadImages = async (locationId) => {
     ...prev,
     [locationId]: images,
   }));
+};
+
+//Strahinja, upload slike za lokaciju
+const uploadImage = async (locationId, file) => {
+
+  if (!file) {
+    alert("Izaberi sliku.");
+    return;
+  }
+
+  try {
+    await uploadLocationImage(locationId, file);
+
+    alert("Slika uspešno uploadovana.");
+
+    setSelectedFile(null);
+
+  } catch (err) {
+    console.error(err);
+
+    alert("Upload nije uspeo.");
+  }
 };
 
   const loadLocationsWithRatings = () => {
@@ -583,7 +605,7 @@ const handleDeleteLocation = async (id) => {
   onChange={(e) => setSelectedFile(e.target.files[0])}
 />
 
-<button onClick={() => uploadImage(loc.id)}>
+<button onClick={() => uploadImage(loc.id, selectedFile)}>
   Dodaj sliku
 </button>
 
