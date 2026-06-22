@@ -693,17 +693,22 @@ const handleDeleteLocation = async (id) => {
 
           {filteredLocations.map((loc) => (
             <Marker
+  key={loc.id}
+  position={[loc.lat, loc.lng]}
+  icon={getMarkerIcon(loc)}
+  eventHandlers={{
+    click: () => {
+      console.log("MARKER CLICKED:", loc.id);
 
-            
-              key={loc.id}
-              position={[loc.lat, loc.lng]}
-              icon={getMarkerIcon(loc)}
-              eventHandlers={
-                directionsMode === "selectB"
-                  ? { click: () => handleSelectB(loc) }
-                  : {}
-              }
-            >
+      if (directionsMode === "selectB") {
+        handleSelectB(loc);
+        return;
+      }
+
+      setSelectedLocationId(loc.id);
+    }
+  }}
+>
               {directionsMode !== "selectB" && (
                 <Popup>
                   <div className="popup-card">
