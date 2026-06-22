@@ -83,11 +83,11 @@ public class ZelenaMapaKontroler {
         return service.reject(id);
     }
 
-    @PostMapping("/images")
+    @PostMapping(value = "/images", consumes = "multipart/form-data")
     public LocationImage upload(
-            @RequestParam Long locationId,
-            @RequestParam MultipartFile file)
-            throws IOException {
+            @RequestParam("locationId") Long locationId,
+            @RequestParam("file") MultipartFile file
+    ) throws IOException {
 
         return service.upload(locationId, file);
     }
