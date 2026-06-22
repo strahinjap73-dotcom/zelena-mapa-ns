@@ -8,6 +8,7 @@ import AddLocationModal from "./components/AddLocationModal";
 import LoginModal from "./components/LoginModal";
 import RegisterModal from "./components/RegisterModal";
 import RatingWidget from "./components/RatingWidget";
+import ReportModal from "./components/ReportModal";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -248,6 +249,7 @@ function App() {
   const [routeWarning, setRouteWarning] = useState(null);
   const [routeLoading, setRouteLoading] = useState(false);
   const [routeError, setRouteError] = useState(null);
+  const [showReport, setShowReport] = useState(false);
 
   const loadLocationsWithRatings = () => {
     getLocations()
@@ -358,6 +360,9 @@ function App() {
     <div className="app">
       <header className="header">
         <div className="header-auth">
+          <button className="btn-report" onClick={() => setShowReport(true)}>
+            ⚠ Prijavi problem
+          </button>
           {username ? (
             <>
               <span>Prijavljen: {username}</span>
@@ -566,6 +571,11 @@ function App() {
           setShowRegister(false);
           setShowLogin(true);
         }}
+      />
+       <ReportModal
+        open={showReport}
+        onClose={() => setShowReport(false)}
+        username={username}
       />
     </div>
   );
