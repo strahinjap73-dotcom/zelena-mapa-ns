@@ -141,7 +141,14 @@ export const uploadLocationImage = async (
 };
 
 export const getImages = async (locationId) => {
-  const res = await fetch(`${BASE_URL}/api/images/${locationId}`);
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${BASE_URL}/api/images/${locationId}`, {
+    method: "GET",
+    headers: {
+      Authorization: token ? `Bearer ${token}` : ""
+    }
+  });
 
   if (!res.ok) {
     throw new Error("Failed to load images");

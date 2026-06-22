@@ -370,9 +370,10 @@ const loadRatings = async (locationId) => {
 useEffect(() => {
   if (!selectedLocationId) return;
 
+  console.log("LOADING IMAGES FOR:", selectedLocationId);
+
   loadImages(selectedLocationId);
   loadRatings(selectedLocationId);
-
 }, [selectedLocationId]);
 
 
