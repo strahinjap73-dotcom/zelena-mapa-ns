@@ -282,39 +282,46 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [loadingImages, setLoadingImages] = useState({});
 
+  const [selectedLocationId, setSelectedLocationId] = useState(null);
+
+  
+
+
+
 //Strahinja, ucitavanje svih slika za lokaciju sa loactionId  
 const loadImages = async (locationId) => {
-   console.log("LOAD IMAGES CALLED:", locationId);
   try {
-    setLoadingImages(prev => ({
-      ...prev,
-      [locationId]: true
-    }));
+    const id = String(locationId);
 
-    const data = await getImages(locationId);
+    console.log("LOAD IMAGES CALLED:", id);
+
+    setLoadingImages(prev => ({ ...prev, [id]: true }));
+
+    const data = await getImages(id);
+
     console.log("IMAGES FROM BACKEND:", data);
 
-    // sigurnost: filtriraj null/undefined slike
-    const cleanData = (data || []).filter(
-      img => img && img.imageUrl
-    );
+    const clean = Array.isArray(data)
+      ? data.filter(img => img?.imageUrl)
+      : [];
 
     setImagesByLocation(prev => ({
       ...prev,
-      [locationId]: cleanData
+      [id]: clean
     }));
 
-  } catch (error) {
-    console.error("Error loading images:", error);
+  } catch (e) {
+    console.error("loadImages error:", e);
 
     setImagesByLocation(prev => ({
       ...prev,
-      [locationId]: []
+      [String(locationId)]: []
     }));
+
   } finally {
     setLoadingImages(prev => ({
       ...prev,
-      [locationId]: false
+      [String(locationId)]: false
     }));
   }
 };
@@ -359,6 +366,15 @@ const loadRatings = async (locationId) => {
     console.error(err);
   }
 };
+
+useEffect(() => {
+  if (!selectedLocationId) return;
+
+  loadImages(selectedLocationId);
+  loadRatings(selectedLocationId);
+
+}, [selectedLocationId]);
+
 
 //Strahinja, upload slike za lokaciju
 const uploadImage = async (locationId, file) => {
@@ -677,6 +693,8 @@ const handleDeleteLocation = async (id) => {
 
           {filteredLocations.map((loc) => (
             <Marker
+
+            
               key={loc.id}
               position={[loc.lat, loc.lng]}
               icon={getMarkerIcon(loc)}
@@ -687,14 +705,7 @@ const handleDeleteLocation = async (id) => {
               }
             >
               {directionsMode !== "selectB" && (
-                <Popup
-                  eventHandlers={{
-  popupopen: () => {
-    if (!imagesByLocation[loc.id]) {
-      loadImages(loc.id);
-    }
-  },
-}}>
+                <Popup>
                   <div className="popup-card">
                     <h3>{loc.name}</h3>
                     <p>{loc.description}</p>
@@ -811,10 +822,10 @@ const handleDeleteLocation = async (id) => {
                     </div>
 
                     <div className="popup-image-grid">
-  {loadingImages[loc.id] ? (
+  {loadingImages[String(loc.id)] ? (
     <p>Učitavanje slika...</p>
-  ) : imagesByLocation[loc.id]?.length > 0 ? (
-    imagesByLocation[loc.id].map((img) => (
+  ) : (imagesByLocation[String(loc.id)] || []).length > 0 ? (
+    (imagesByLocation[String(loc.id)] || []).map((img) => (
       <img
         key={img.id}
         src={img.imageUrl}
