@@ -782,10 +782,19 @@ const handleDeleteLocation = async (id) => {
                     </div>
 
                     <div className="popup-image-grid">
-                      {imagesByLocation[loc.id]?.map((img) => (
-                        <img key={img.id} src={img.imageUrl} alt="" />
-                      ))}
-                    </div>
+  {imagesByLocation[loc.id]?.length > 0 ? (
+    imagesByLocation[loc.id].map((img) => (
+      <img
+        key={img.id}
+        src={img.imageUrl}
+        alt="location"
+        className="popup-thumb"
+      />
+    ))
+  ) : (
+    <p className="popup-no-images">Nema slika za ovu lokaciju</p>
+  )}
+</div>
 
                     {imagesByLocation[loc.id]?.length === 0 && (
                       <p className="popup-no-images">
