@@ -140,10 +140,8 @@ export const uploadLocationImage = async (
   }
 };
 
-export const getLocationImages = async (locationId) => {
-  const res = await fetch(
-    `${BASE_URL}/api/images/${locationId}`
-  );
+export const getImages = async (locationId) => {
+  const res = await fetch(`${BASE_URL}/api/images/${locationId}`);
 
   if (!res.ok) {
     throw new Error("Failed to load images");

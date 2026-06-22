@@ -3,7 +3,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useEffect, useState, useRef } from "react";
 import "./App.css";
-import { getLocations, getAverageRating, getRatings, addLocation, login, register, uploadLocationImage, getFriends, recommendLocation, getNotifications } from "./api/api";
+import { getLocations, getAverageRating, getRatings, addLocation, login, register, uploadLocationImage, getFriends, recommendLocation, getNotifications, getImages } from "./api/api";
 import AddLocationModal from "./components/AddLocationModal";
 import LoginModal from "./components/LoginModal";
 import RegisterModal from "./components/RegisterModal";
@@ -280,15 +280,41 @@ function App() {
   const [search, setSearch] = useState("");
   //Strahinja, loading
   const [loading, setLoading] = useState(false);
+  const [loadingImages, setLoadingImages] = useState({});
 
 //Strahinja, ucitavanje svih slika za lokaciju sa loactionId  
 const loadImages = async (locationId) => {
-  const images = await getLocationImages(locationId);
+  try {
+    setLoadingImages(prev => ({
+      ...prev,
+      [locationId]: true
+    }));
 
-  setImagesByLocation((prev) => ({
-    ...prev,
-    [locationId]: images,
-  }));
+    const data = await getImages(locationId);
+
+    // sigurnost: filtriraj null/undefined slike
+    const cleanData = (data || []).filter(
+      img => img && img.imageUrl
+    );
+
+    setImagesByLocation(prev => ({
+      ...prev,
+      [locationId]: cleanData
+    }));
+
+  } catch (error) {
+    console.error("Error loading images:", error);
+
+    setImagesByLocation(prev => ({
+      ...prev,
+      [locationId]: []
+    }));
+  } finally {
+    setLoadingImages(prev => ({
+      ...prev,
+      [locationId]: false
+    }));
+  }
 };
 
 const loadRatings = async (locationId) => {
@@ -661,11 +687,12 @@ const handleDeleteLocation = async (id) => {
               {directionsMode !== "selectB" && (
                 <Popup
                   eventHandlers={{
-                    popupopen: () => {
-                      loadImages(loc.id);
-                      loadRatings(loc.id);
-                    },
-                  }}>
+  popupopen: () => {
+    if (!imagesByLocation[loc.id]) {
+      loadImages(loc.id);
+    }
+  },
+}}>
                   <div className="popup-card">
                     <h3>{loc.name}</h3>
                     <p>{loc.description}</p>
@@ -782,17 +809,22 @@ const handleDeleteLocation = async (id) => {
                     </div>
 
                     <div className="popup-image-grid">
-  {imagesByLocation[loc.id]?.length > 0 ? (
+  {loadingImages[loc.id] ? (
+    <p>Učitavanje slika...</p>
+  ) : imagesByLocation[loc.id]?.length > 0 ? (
     imagesByLocation[loc.id].map((img) => (
       <img
         key={img.id}
         src={img.imageUrl}
         alt="location"
         className="popup-thumb"
+        loading="lazy"
       />
     ))
   ) : (
-    <p className="popup-no-images">Nema slika za ovu lokaciju</p>
+    <p className="popup-no-images">
+      Nema slika za ovu lokaciju
+    </p>
   )}
 </div>
 
