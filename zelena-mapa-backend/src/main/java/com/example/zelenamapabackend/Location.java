@@ -1,5 +1,6 @@
 package com.example.zelenamapabackend;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -14,6 +15,12 @@ public class Location {
     private double lat;
     private double lng;
     private String status;
+    private boolean privateLocation;
+
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
+    @JsonIgnore
+    private User owner;
 
     // getters & setters
 
@@ -41,6 +48,14 @@ public class Location {
         return status;
     }
 
+    public boolean isPrivateLocation() {
+        return privateLocation;
+    }
+
+    public User getOwner() {
+        return owner;
+    }
+
     public void setName(String name) {
         this.name = name;
     }
@@ -59,6 +74,14 @@ public class Location {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public void setPrivateLocation(boolean privateLocation) {
+        this.privateLocation = privateLocation;
+    }
+
+    public void setOwner(User owner) {
+        this.owner = owner;
     }
 
 }

@@ -1,9 +1,14 @@
 package com.example.zelenamapabackend;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
+@JsonIgnoreProperties({"password", "friends"})
 public class User {
 
     @Id
@@ -20,6 +25,14 @@ public class User {
     private String password;
 
     private String role;
+
+    @ManyToMany
+    @JoinTable(
+            name = "user_friends",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "friend_id")
+    )
+    private Set<User> friends = new HashSet<>();
 
     public User() {
     }
@@ -69,5 +82,21 @@ public class User {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public Set<User> getFriends() {
+        return friends;
+    }
+
+    public void setFriends(Set<User> friends) {
+        this.friends = friends;
+    }
+
+    public void addFriend(User u) {
+        this.friends.add(u);
+    }
+
+    public void removeFriend(User u) {
+        this.friends.remove(u);
     }
 }

@@ -5,6 +5,7 @@ function AddLocationModal({ isOpen, onClose, onSave, selectedPosition }) {
   const [form, setForm] = useState({
     name: "",
     description: "",
+    visibility: "PUBLIC",
   });
 
   if (!isOpen) return null;
@@ -16,7 +17,7 @@ function AddLocationModal({ isOpen, onClose, onSave, selectedPosition }) {
   const handleSubmit = () => {
     onSave(form);
     toast.success("Uspešno sačuvano!");
-    setForm({ name: "", description: "" });
+    setForm({ name: "", description: "", visibility: "PUBLIC" });
   };
 
   return (
@@ -43,6 +44,18 @@ function AddLocationModal({ isOpen, onClose, onSave, selectedPosition }) {
           value={form.description}
           onChange={handleChange}
         />
+
+        <div className="field-group">
+          <label className="visibility-label">Vidljivost lokacije</label>
+          <select
+            name="visibility"
+            value={form.visibility}
+            onChange={handleChange}
+          >
+            <option value="PUBLIC">Javna</option>
+            <option value="PRIVATE">Privatna</option>
+          </select>
+        </div>
 
         <div className="modal-actions">
           <button className="btn-confirm" onClick={handleSubmit}>

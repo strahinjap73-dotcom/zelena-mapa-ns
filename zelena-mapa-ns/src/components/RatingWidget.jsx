@@ -2,21 +2,35 @@ import { useState } from "react";
 import { addRating } from "../api/api";
 
 function RatingWidget({ locationId, username, onRated }) {
-  const [hover, setHover] = useState(0);
+  const [distanceFromCenter, setDistanceFromCenter] = useState(0);
+  const [cleanliness, setCleanliness] = useState(0);
+  const [greenArea, setGreenArea] = useState(0);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState(null);
 
   if (!username) {
     return <p className="rating-login-hint">Prijavi se da bi ocenio lokaciju.</p>;
   }
 
-  const handleRate = async (value) => {
+  const handleSubmit = async () => {
+    setError(null);
+
+    if (!distanceFromCenter || !cleanliness || !greenArea) {
+      setError("Molimo ocenite sve tri kategorije.");
+      return;
+    }
+
     try {
-      const token = localStorage.getItem("token");
-      await addRating(locationId, { value, token });
+      await addRating(locationId, {
+        distanceFromCenter,
+        cleanliness,
+        greenArea,
+      });
       setSubmitted(true);
       onRated();
     } catch (err) {
       console.error(err);
+      setError(err.message || "Greška pri slanju ocene.");
     }
   };
 
@@ -24,23 +38,28 @@ function RatingWidget({ locationId, username, onRated }) {
     return <p>Hvala na oceni!</p>;
   }
 
+  const renderSelect = (label, value, setter) => (
+    <div className="rating-field">
+      <label>{label}</label>
+      <select value={value} onChange={(e) => setter(Number(e.target.value))}>
+        <option value={0}>Izaberi...</option>
+        {[1, 2, 3, 4, 5].map((val) => (
+          <option key={val} value={val}>{val}</option>
+        ))}
+      </select>
+    </div>
+  );
+
   return (
     <div className="rating-widget">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <span
-          key={star}
-          onClick={() => handleRate(star)}
-          onMouseEnter={() => setHover(star)}
-          onMouseLeave={() => setHover(0)}
-          style={{
-            cursor: "pointer",
-            color: star <= hover ? "#ffc107" : "#ccc",
-            fontSize: "1.5rem",
-          }}
-        >
-          ★
-        </span>
-      ))}
+      {renderSelect("Udaljenost od centra:", distanceFromCenter, setDistanceFromCenter)}
+      {renderSelect("Čistoća:", cleanliness, setCleanliness)}
+      {renderSelect("Veličina zelene površine:", greenArea, setGreenArea)}
+
+      {error && <p className="rating-error">{error}</p>}
+      <button className="btn-primary rating-submit-btn" onClick={handleSubmit}>
+        Pošalji ocenu
+      </button>
     </div>
   );
 }

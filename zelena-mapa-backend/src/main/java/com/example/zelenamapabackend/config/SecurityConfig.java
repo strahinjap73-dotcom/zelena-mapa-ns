@@ -3,6 +3,7 @@ package com.example.zelenamapabackend.config;
 import com.example.zelenamapabackend.security.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -60,10 +61,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
 
                         // 🔓 PUBLIC
-                        .requestMatchers("/auth/**").permitAll()
+                                .requestMatchers("/auth/**").permitAll()
 
                         // 🔒 ADMIN (mora pre /api/**)
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        // ⭐ OCENA mora biti prijavljena
+                        .requestMatchers(HttpMethod.POST, "/api/*/rating").authenticated()
 
                         // 🔓 REST API
                         .requestMatchers("/api/**").permitAll()

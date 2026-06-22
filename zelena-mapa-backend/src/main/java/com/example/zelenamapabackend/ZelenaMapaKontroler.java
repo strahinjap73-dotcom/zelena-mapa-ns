@@ -20,20 +20,20 @@ public class ZelenaMapaKontroler {
 
     // 📍 GET ALL LOCATIONS
     @GetMapping
-    public List<Location> getAll() {
-        return service.getAllLocations();
+    public List<Location> getAll(java.security.Principal principal) {
+        return service.getAllLocations(principal);
     }
 
     // 📍 GET ONE LOCATION
     @GetMapping("/{id}")
-    public Location getOne(@PathVariable Long id) {
-        return service.getLocation(id);
+    public Location getOne(@PathVariable Long id, java.security.Principal principal) {
+        return service.getLocation(id, principal);
     }
 
     // ➕ ADD LOCATION
     @PostMapping
-    public Location create(@RequestBody Location location) {
-        return service.addLocation(location);
+    public Location create(@RequestBody Location location, java.security.Principal principal) {
+        return service.addLocation(location, principal == null ? null : principal.getName());
     }
 
     // ❌ DELETE LOCATION
@@ -46,9 +46,13 @@ public class ZelenaMapaKontroler {
     @PostMapping("/{id}/rating")
     public Rating addRating(
             @PathVariable Long id,
-            @RequestBody int rating
+            @RequestBody com.example.zelenamapabackend.dto.RatingRequest ratingRequest,
+            java.security.Principal principal
     ) {
-        return service.addRating(id, rating);
+        if (principal == null) {
+            throw new RuntimeException("Morate biti prijavljeni da biste ocenili lokaciju");
+        }
+        return service.addRating(id, ratingRequest, principal.getName());
     }
 
     // 📊 GET RATINGS
@@ -93,5 +97,43 @@ public class ZelenaMapaKontroler {
             @PathVariable Long locationId) {
 
         return service.pronadjiSlikeZaLokaciju(locationId);
+    }
+
+    // === Users / Friends ===
+    @GetMapping("/users/search")
+    public List<User> searchUsers(@RequestParam String q) {
+        return service.searchUsers(q);
+    }
+
+    @PostMapping("/users/{id}/add")
+    public void addFriend(@PathVariable Long id, java.security.Principal principal) {
+        if (principal == null) throw new RuntimeException("Morate biti prijavljeni");
+        service.addFriend(principal.getName(), id);
+    }
+
+    @GetMapping("/users/friends")
+    public List<User> getFriends(java.security.Principal principal) {
+        if (principal == null) throw new RuntimeException("Morate biti prijavljeni");
+        return service.getFriends(principal.getName());
+    }
+
+    // Recommend a location to a friend
+    @PostMapping("/{id}/recommend/{friendId}")
+    public Notification recommend(@PathVariable Long id, @PathVariable Long friendId, java.security.Principal principal) {
+        if (principal == null) throw new RuntimeException("Morate biti prijavljeni");
+        return service.recommendLocation(id, friendId, principal.getName());
+    }
+
+    // Notifications
+    @GetMapping("/notifications")
+    public List<Notification> getNotifications(java.security.Principal principal) {
+        if (principal == null) throw new RuntimeException("Morate biti prijavljeni");
+        return service.getNotifications(principal.getName());
+    }
+
+    @PutMapping("/notifications/{id}/read")
+    public Notification markNotificationRead(@PathVariable Long id, java.security.Principal principal) {
+        if (principal == null) throw new RuntimeException("Morate biti prijavljeni");
+        return service.markNotificationRead(id, principal.getName());
     }
 }

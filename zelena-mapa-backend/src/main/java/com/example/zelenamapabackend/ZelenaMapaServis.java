@@ -3,13 +3,16 @@ package com.example.zelenamapabackend;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.example.zelenamapabackend.dto.RatingRequest;
 import com.example.zelenamapabackend.repository.LocationImageRepository;
+import com.example.zelenamapabackend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
@@ -18,38 +21,84 @@ public class ZelenaMapaServis {
 
     private final LocationRepository locationRepo;
     private final RatingRepository ratingRepo;
+    private final UserRepository userRepo;
+    private final com.example.zelenamapabackend.repository.NotificationRepository notificationRepo;
 
     private final Cloudinary cloudinary;
     private final LocationImageRepository imageRepository;
 
-    public ZelenaMapaServis(LocationRepository locationRepo, RatingRepository ratingRepo, Cloudinary cloudinary, LocationImageRepository imageRepository) {
+    public ZelenaMapaServis(LocationRepository locationRepo, RatingRepository ratingRepo, UserRepository userRepo, com.example.zelenamapabackend.repository.NotificationRepository notificationRepo, Cloudinary cloudinary, LocationImageRepository imageRepository) {
         this.locationRepo = locationRepo;
         this.ratingRepo = ratingRepo;
+        this.userRepo = userRepo;
+        this.notificationRepo = notificationRepo;
         this.cloudinary = cloudinary;
         this.imageRepository = imageRepository;
     }
 
     // 📍 GET ALL LOCATIONS
-    public List<Location> getAllLocations() {
-        return locationRepo.findByStatus("APPROVED");
+    public List<Location> getAllLocations(java.security.Principal principal) {
+        List<Location> locations = locationRepo.findByStatus("APPROVED");
+
+        if (principal == null) {
+            return locations.stream()
+                    .filter(loc -> !loc.isPrivateLocation())
+                    .toList();
+        }
+
+        User user = userRepo.findByEmail(principal.getName()).orElse(null);
+
+        return locations.stream()
+                .filter(loc -> !loc.isPrivateLocation() ||
+                        (loc.getOwner() != null && user != null && loc.getOwner().getEmail().equals(user.getEmail())))
+                .toList();
     }
 
     // 📍 GET ONE LOCATION
     public Location getLocation(Long id) {
-        return locationRepo.findById(id)
+        return getLocation(id, null);
+    }
+
+    public Location getLocation(Long id, java.security.Principal principal) {
+        Location location = locationRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Location not found"));
+
+        if (location.isPrivateLocation()) {
+            if (principal == null) {
+                throw new RuntimeException("Lokacija nije dostupna");
+            }
+            User user = userRepo.findByEmail(principal.getName())
+                    .orElseThrow(() -> new RuntimeException("Korisnik nije pronađen"));
+            if (location.getOwner() == null || !location.getOwner().getEmail().equals(user.getEmail())) {
+                throw new RuntimeException("Lokacija nije dostupna");
+            }
+        }
+
+        return location;
     }
 
     // ➕ ADD LOCATION
-    public Location addLocation(Location location) {
+    public Location addLocation(Location location, String userEmail) {
         Location newLocation = new Location();
 
         newLocation.setName(location.getName());
         newLocation.setDescription(location.getDescription());
         newLocation.setLat(location.getLat());
         newLocation.setLng(location.getLng());
-
+        newLocation.setPrivateLocation(location.isPrivateLocation());
         newLocation.setStatus("APPROVED");
+
+        if (location.isPrivateLocation()) {
+            if (userEmail == null) {
+                throw new RuntimeException("Morate biti prijavljeni da biste kreirali privatnu lokaciju");
+            }
+            User owner = userRepo.findByEmail(userEmail)
+                    .orElseThrow(() -> new RuntimeException("Korisnik nije pronađen"));
+            newLocation.setOwner(owner);
+        } else if (userEmail != null) {
+            User owner = userRepo.findByEmail(userEmail).orElse(null);
+            newLocation.setOwner(owner);
+        }
 
         return locationRepo.save(newLocation);
     }
@@ -60,13 +109,24 @@ public class ZelenaMapaServis {
     }
 
     // ⭐ ADD RATING TO LOCATION
-    public Rating addRating(Long locationId, int ratingValue) {
+    public Rating addRating(Long locationId, RatingRequest ratingRequest, String userEmail) {
 
         Location location = getLocation(locationId);
+        User user = userRepo.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("Korisnik nije pronađen"));
+
+        if (ratingRepo.existsByLocationIdAndUserId(locationId, user.getId())) {
+            throw new RuntimeException("Korisnik je već ocenio ovu lokaciju");
+        }
 
         Rating rating = new Rating();
-        rating.setRating(ratingValue);
+        rating.setDistanceFromCenter(ratingRequest.getDistanceFromCenter());
+        rating.setCleanliness(ratingRequest.getCleanliness());
+        rating.setGreenArea(ratingRequest.getGreenArea());
         rating.setLocation(location);
+        rating.setUser(user);
+        // compute and store aggregated rating value for legacy DB column
+        rating.setRating(rating.getAverage());
 
         return ratingRepo.save(rating);
     }
@@ -82,7 +142,7 @@ public class ZelenaMapaServis {
         List<Rating> ratings = ratingRepo.findByLocationId(locationId);
 
         return ratings.stream()
-                .mapToInt(Rating::getRating)
+                .mapToDouble(Rating::getAverage)
                 .average()
                 .orElse(0.0);
     }
@@ -139,5 +199,52 @@ public class ZelenaMapaServis {
             @PathVariable Long locationId) {
         return imageRepository.findByLocationId(locationId);
 
+    }
+
+    // === Friends & Notifications ===
+    public java.util.List<User> searchUsers(String username) {
+        return userRepo.findByUsernameContainingIgnoreCase(username);
+    }
+
+    public void addFriend(String userEmail, Long friendId) {
+        User user = userRepo.findByEmail(userEmail).orElseThrow(() -> new RuntimeException("Korisnik nije pronađen"));
+        User friend = userRepo.findById(friendId).orElseThrow(() -> new RuntimeException("Prijatelj nije pronađen"));
+        if (user.getFriends().contains(friend)) return;
+        user.addFriend(friend);
+        friend.addFriend(user);
+        userRepo.save(user);
+        userRepo.save(friend);
+    }
+
+    public java.util.List<User> getFriends(String userEmail) {
+        User user = userRepo.findByEmail(userEmail).orElseThrow(() -> new RuntimeException("Korisnik nije pronađen"));
+        return new java.util.ArrayList<>(user.getFriends());
+    }
+
+    public Notification recommendLocation(Long locationId, Long friendId, String fromEmail) {
+        Location loc = locationRepo.findById(locationId).orElseThrow(() -> new RuntimeException("Lokacija nije pronađena"));
+        User from = userRepo.findByEmail(fromEmail).orElseThrow(() -> new RuntimeException("Korisnik nije pronađen"));
+        User to = userRepo.findById(friendId).orElseThrow(() -> new RuntimeException("Prijatelj nije pronađen"));
+        // ensure they are friends
+        if (!from.getFriends().contains(to)) {
+            throw new RuntimeException("Morate biti prijatelji da biste preporučili lokaciju");
+        }
+        Notification n = new Notification();
+        n.setFromUser(from);
+        n.setToUser(to);
+        n.setMessage(from.getUsername() + " preporučio lokaciju: " + loc.getName());
+        return notificationRepo.save(n);
+    }
+
+    public java.util.List<Notification> getNotifications(String userEmail) {
+        User user = userRepo.findByEmail(userEmail).orElseThrow(() -> new RuntimeException("Korisnik nije pronađen"));
+        return notificationRepo.findByToUserIdOrderByCreatedAtDesc(user.getId());
+    }
+
+    public Notification markNotificationRead(Long id, String userEmail) {
+        Notification n = notificationRepo.findById(id).orElseThrow(() -> new RuntimeException("Notifikacija nije pronađena"));
+        if (!n.getToUser().getEmail().equals(userEmail)) throw new RuntimeException("Nije ovlašćenje");
+        n.setReadFlag(true);
+        return notificationRepo.save(n);
     }
 }

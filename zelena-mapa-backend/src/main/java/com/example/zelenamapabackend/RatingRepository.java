@@ -7,4 +7,6 @@ import java.util.List;
 public interface RatingRepository extends JpaRepository<Rating, Long> {
 
     List<Rating> findByLocationId(Long locationId);
+
+    boolean existsByLocationIdAndUserId(Long locationId, Long userId);
 }
