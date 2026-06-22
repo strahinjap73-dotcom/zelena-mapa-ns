@@ -284,6 +284,7 @@ function App() {
 
 //Strahinja, ucitavanje svih slika za lokaciju sa loactionId  
 const loadImages = async (locationId) => {
+   console.log("LOAD IMAGES CALLED:", locationId);
   try {
     setLoadingImages(prev => ({
       ...prev,
@@ -291,6 +292,7 @@ const loadImages = async (locationId) => {
     }));
 
     const data = await getImages(locationId);
+    console.log("IMAGES FROM BACKEND:", data);
 
     // sigurnost: filtriraj null/undefined slike
     const cleanData = (data || []).filter(
