@@ -60,21 +60,25 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
 
-                        // 🔓 PUBLIC
-                                .requestMatchers("/auth/**").permitAll()
+                        // 🔓 AUTH
+                        .requestMatchers("/auth/**").permitAll()
 
-                        // 🔒 ADMIN (mora pre /api/**)
+                        // 🔒 ADMIN
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                        // ⭐ OCENA mora biti prijavljena
+                        // 🔒 UPLOAD / IMAGES (mora biti login)
+                        .requestMatchers("/api/images/**").authenticated()
+
+                        // ⭐ OCENE (login obavezan)
                         .requestMatchers(HttpMethod.POST, "/api/*/rating").authenticated()
 
-                        // 🔓 REST API
+                        // 🔓 OSTALI API ENDPOINTI (ako stvarno želiš javne)
                         .requestMatchers("/api/**").permitAll()
 
-                        // 🔐 fallback
+                        // 🔐 fallback (sve ostalo zaštićeno)
                         .anyRequest().authenticated()
                 );
+
 
         http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
