@@ -809,7 +809,13 @@ function App() {
                         </span>
                       )}
                     </button>
-
+                    <button
+                      className="hb-icon-btn"
+                      title="Prijavi problem"
+                      onClick={() => setShowReport(true)}
+                    >
+                      ⚠
+                    </button>
                     {role === "ADMIN" && (
                       <button
                         className="hb-icon-btn"
@@ -830,13 +836,6 @@ function App() {
                   </>
                 ) : (
                   <>
-                    <button
-                      className="hb-icon-btn"
-                      title="Prijavi problem"
-                      onClick={() => setShowReport(true)}
-                    >
-                      ⚠
-                     </button>
                     <button
                       className="hb-login-btn"
                       onClick={() => setShowLogin(true)}
