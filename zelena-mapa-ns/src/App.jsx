@@ -25,6 +25,7 @@ import {
   getNotifications,
   getImages,
   getPendingFriendRequests,
+  adminUpdateLocation
 } from "./api/api";
 import AddLocationModal from "./components/AddLocationModal";
 import LoginModal from "./components/LoginModal";
@@ -367,7 +368,6 @@ function RouteLayer({ routeCoords, routeMode }) {
 
 function App() {
   const [recommendLocation_loc, setRecommendLocation_loc] = useState(null);
-  const [adminEditLocation, setAdminEditLocation] = useState(null);
   const [locations, setLocations] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState(null);
@@ -407,6 +407,16 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [loadingImages, setLoadingImages] = useState({});
   const [selectedLocationId, setSelectedLocationId] = useState(null);
+
+  const [adminEditLocation, setAdminEditLocation] = useState(null);
+const [editForm, setEditForm] = useState({
+  name: "",
+  description: "",
+  lat: 0,
+  lng: 0,
+  status: "",
+  privateLocation: false,
+});
 
   const [confirmModal, setConfirmModal] = useState({
     open: false,
@@ -593,6 +603,8 @@ function App() {
       localStorage.setItem(`rated_${username}`, JSON.stringify(updatedRatings));
     }
   };
+
+  
 
   const loadUnreadCount = async () => {
     if (!username) {
@@ -1210,12 +1222,23 @@ function App() {
                         {role === "ADMIN" && (
   <>
     <button
-      className="btn-confirm"
-      style={{ marginTop: 4 }}
-      onClick={() => setAdminEditLocation(loc)}
-    >
-      ✏️ Izmeni lokaciju
-    </button>
+  className="btn-confirm"
+  style={{ marginTop: 4 }}
+  onClick={() => {
+    setAdminEditLocation(loc);
+
+    setEditForm({
+      name: loc.name,
+      description: loc.description,
+      lat: loc.lat,
+      lng: loc.lng,
+      status: loc.status,
+      privateLocation: loc.privateLocation,
+    });
+  }}
+>
+  ✏️ Izmeni lokaciju
+</button>
     <button
       className="delete-btn"
       onClick={() => handleDeleteLocation(loc.id)}
@@ -1344,9 +1367,11 @@ function App() {
   <AdminEditLocationModal
     location={adminEditLocation}
     onClose={() => setAdminEditLocation(null)}
-    onUpdated={() => {
+    onUpdated={(updated) => {
+      setLocations(prev =>
+        prev.map(l => l.id === updated.id ? updated : l)
+      );
       setAdminEditLocation(null);
-      loadLocationsWithRatings();
     }}
   />
 )}
