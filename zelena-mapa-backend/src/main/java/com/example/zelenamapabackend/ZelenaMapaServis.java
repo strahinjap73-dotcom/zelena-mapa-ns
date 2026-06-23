@@ -261,8 +261,10 @@ public class ZelenaMapaServis {
         return notificationRepo.save(n);
     }
 
-    public FriendRequest sendFriendRequest(String senderUsername, Long receiverId) {
-        User sender = userRepo.findByUsername(senderUsername)
+    // ===== ZAMENI ove dve metode u ZelenaMapaServis.java =====
+
+    public FriendRequest sendFriendRequest(String senderEmail, Long receiverId) {
+        User sender = userRepo.findByEmail(senderEmail)  // bilo: findByUsername
                 .orElseThrow(() -> new RuntimeException("Korisnik ne postoji"));
         User receiver = userRepo.findById(receiverId)
                 .orElseThrow(() -> new RuntimeException("Primalac ne postoji"));
@@ -285,17 +287,20 @@ public class ZelenaMapaServis {
         return friendRequestRepository.save(request);
     }
 
-    public List<FriendRequest> getPendingRequests(String username) {
-        User user = userRepo.findByUsername(username)
+    public List<FriendRequest> getPendingRequests(String email) {
+        User user = userRepo.findByEmail(email)  // bilo: findByUsername
                 .orElseThrow(() -> new RuntimeException("Korisnik ne postoji"));
         return friendRequestRepository.findByReceiverIdAndStatus(user.getId(), FriendRequest.Status.PENDING);
     }
 
-    public FriendRequest respondToRequest(Long requestId, boolean accept, String username) {
+    public FriendRequest respondToRequest(Long requestId, boolean accept, String email) {
         FriendRequest request = friendRequestRepository.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("Zahtev ne postoji"));
 
-        if (!request.getReceiver().getUsername().equals(username)) {
+        User currentUser = userRepo.findByEmail(email)  // bilo: poređenje sa username
+                .orElseThrow(() -> new RuntimeException("Korisnik nije pronađen"));
+
+        if (!request.getReceiver().getId().equals(currentUser.getId())) {
             throw new RuntimeException("Nemate pravo da odgovorite na ovaj zahtev");
         }
         if (request.getStatus() != FriendRequest.Status.PENDING) {

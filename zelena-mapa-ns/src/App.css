@@ -1828,3 +1828,65 @@ button:active {
 .notif-close-btn:hover {
   background: rgba(0, 0, 0, 0.09);
 }
+
+/* ===== DODATI U App.css ===== */
+
+/* Friend request item layout */
+.friend-req-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.friend-req-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Accept button — green */
+.friend-req-accept-btn {
+  background: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    opacity 0.15s;
+}
+.friend-req-accept-btn:hover:not(:disabled) {
+  background: #15803d;
+}
+.friend-req-accept-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Reject button — red, outlined */
+.friend-req-reject-btn {
+  background: transparent;
+  color: #dc2626;
+  border: 1.5px solid #dc2626;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    opacity 0.15s;
+}
+.friend-req-reject-btn:hover:not(:disabled) {
+  background: #dc2626;
+  color: white;
+}
+.friend-req-reject-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

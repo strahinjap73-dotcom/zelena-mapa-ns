@@ -9,8 +9,8 @@ const authHeader = () => {
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
   ? import.meta.env.VITE_API_BASE_URL
   : window.location.hostname === "localhost"
-  ? "http://localhost:8080"
-  : REMOTE_BASE_URL;
+    ? "http://localhost:8080"
+    : REMOTE_BASE_URL;
 
 export const getLocations = async () => {
   const headers = getToken() ? authHeader() : {};
@@ -29,7 +29,6 @@ export const addLocation = async (location) => {
     },
     body: JSON.stringify(location),
   });
-  
 };
 
 export const addRating = async (id, ratingData) => {
@@ -51,7 +50,7 @@ export const addRating = async (id, ratingData) => {
 export const getAverageRating = async (id) => {
   const res = await fetch(`${BASE_URL}/api/${id}/rating/average`);
   if (!res.ok) return { average: 0 };
-  const value = await res.json(); 
+  const value = await res.json();
   return { average: value };
 };
 
@@ -90,17 +89,16 @@ export const register = (username, email, password) =>
     return res.text();
   });
 
-  export const approveLocation = async (id) => {
+export const approveLocation = async (id) => {
   return fetch(`${BASE_URL}/api/admin/locations/${id}/approve`, {
     method: "PUT",
-    headers: authHeader()
+    headers: authHeader(),
   });
-  
 };
 
 export const getPendingLocations = async () => {
   const res = await fetch(`${BASE_URL}/api/admin/locations/pending`, {
-    headers: authHeader()
+    headers: authHeader(),
   });
   return res.json();
 };
@@ -108,32 +106,23 @@ export const getPendingLocations = async () => {
 export const rejectLocation = async (id) => {
   return fetch(`${BASE_URL}/api/admin/locations/${id}/reject`, {
     method: "PUT",
-    headers: authHeader()
+    headers: authHeader(),
   });
 };
 
-export const uploadLocationImage = async (
-  locationId,
-  file
-) => {
-
+export const uploadLocationImage = async (locationId, file) => {
   const formData = new FormData();
 
   formData.append("locationId", locationId);
   formData.append("file", file);
 
-  const response = await fetch(
-    `${BASE_URL}/api/images`,
-    {
-      method: "POST",
-      headers: {
-        Authorization:
-          "Bearer " +
-          localStorage.getItem("token")
-      },
-      body: formData
-    }
-  );
+  const response = await fetch(`${BASE_URL}/api/images`, {
+    method: "POST",
+    headers: {
+      Authorization: "Bearer " + localStorage.getItem("token"),
+    },
+    body: formData,
+  });
 
   if (!response.ok) {
     throw new Error("Upload failed");
@@ -146,8 +135,8 @@ export const getImages = async (locationId) => {
   const res = await fetch(`${BASE_URL}/api/images/${locationId}`, {
     method: "GET",
     headers: {
-      Authorization: token ? `Bearer ${token}` : ""
-    }
+      Authorization: token ? `Bearer ${token}` : "",
+    },
   });
 
   if (!res.ok) {
@@ -158,38 +147,52 @@ export const getImages = async (locationId) => {
 };
 
 export const searchUsers = async (q) => {
-  const res = await fetch(`${BASE_URL}/api/users/search?q=${encodeURIComponent(q)}`,
-    { headers: authHeader() }
+  const res = await fetch(
+    `${BASE_URL}/api/users/search?q=${encodeURIComponent(q)}`,
+    { headers: authHeader() },
   );
   if (!res.ok) return [];
   return res.json();
 };
 
 export const addFriend = async (id) => {
-  return fetch(`${BASE_URL}/api/users/${id}/add`, { method: 'POST', headers: authHeader() });
+  return fetch(`${BASE_URL}/api/users/${id}/add`, {
+    method: "POST",
+    headers: authHeader(),
+  });
 };
 
 export const getFriends = async () => {
-  const res = await fetch(`${BASE_URL}/api/users/friends`, { headers: authHeader() });
+  const res = await fetch(`${BASE_URL}/api/users/friends`, {
+    headers: authHeader(),
+  });
   if (!res.ok) return [];
   return res.json();
 };
 
 export const recommendLocation = async (locationId, friendId) => {
-  const res = await fetch(`${BASE_URL}/api/${locationId}/recommend/${friendId}`, { method: 'POST', headers: authHeader() });
-  if (!res.ok) throw new Error('Recommend failed');
+  const res = await fetch(
+    `${BASE_URL}/api/${locationId}/recommend/${friendId}`,
+    { method: "POST", headers: authHeader() },
+  );
+  if (!res.ok) throw new Error("Recommend failed");
   return res.json();
 };
 
 export const getNotifications = async () => {
-  const res = await fetch(`${BASE_URL}/api/notifications`, { headers: authHeader() });
+  const res = await fetch(`${BASE_URL}/api/notifications`, {
+    headers: authHeader(),
+  });
   if (!res.ok) return [];
   return res.json();
 };
 
 export const markNotificationRead = async (id) => {
-  const res = await fetch(`${BASE_URL}/api/notifications/${id}/read`, { method: 'PUT', headers: authHeader() });
-  if (!res.ok) throw new Error('Failed to mark read');
+  const res = await fetch(`${BASE_URL}/api/notifications/${id}/read`, {
+    method: "PUT",
+    headers: authHeader(),
+  });
+  if (!res.ok) throw new Error("Failed to mark read");
   return res.json();
 };
 
@@ -198,5 +201,41 @@ export const deleteImage = async (imageId) => {
     method: "DELETE",
     headers: authHeader(),
   });
-  if (!res.ok) throw new Error("Delete image failed");
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Failed to delete image");
+  }
+};
+
+// NOVO - stavi ovo:
+export const sendFriendRequest = async (receiverId) => {
+  const res = await fetch(`${BASE_URL}/api/friend-requests/${receiverId}`, {
+    method: "POST",
+    headers: authHeader(),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Failed to send friend request");
+  }
+  return res.json();
+};
+
+export const getPendingFriendRequests = async () => {
+  const res = await fetch(`${BASE_URL}/api/friend-requests/pending`, {
+    headers: authHeader(),
+  });
+  if (!res.ok) return [];
+  return res.json();
+};
+
+export const respondToFriendRequest = async (requestId, accept) => {
+  const res = await fetch(
+    `${BASE_URL}/api/friend-requests/${requestId}/${accept ? "accept" : "reject"}`,
+    { method: "PUT", headers: authHeader() },
+  );
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Failed to respond to friend request");
+  }
+  return res.json();
 };

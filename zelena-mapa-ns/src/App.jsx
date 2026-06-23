@@ -24,6 +24,7 @@ import {
   recommendLocation,
   getNotifications,
   getImages,
+  getPendingFriendRequests,
 } from "./api/api";
 import AddLocationModal from "./components/AddLocationModal";
 import LoginModal from "./components/LoginModal";
@@ -32,6 +33,7 @@ import RatingWidget from "./components/RatingWidget";
 import AdminPanel from "./components/AdminPanel";
 import UserSearchPanel from "./components/UserSearchPanel";
 import NotificationsPanel from "./components/NotificationsPanel";
+import FriendRequestsPanel from "./components/FriendRequestsPanel";
 import ConfirmModal from "./components/ConfirmModal";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -132,7 +134,6 @@ function routePassesThroughBadZone(routeCoords, badLocations, radius = 250) {
   return false;
 }
 
-// OSRM se koristi samo za geometriju i distancu — uvek foot profil
 async function fetchOSRMRoute(from, to, waypoints = []) {
   const coords = [
     [from.lng, from.lat],
@@ -152,8 +153,6 @@ async function fetchOSRMRoute(from, to, waypoints = []) {
   };
 }
 
-// Vremena se racunaju iz distance konstantnim brzinama
-// foot: 5 km/h, bike: 15 km/h, car: 50 km/h
 function calcTravelTimes(distanceMeters) {
   const km = distanceMeters / 1000;
   return {
@@ -390,7 +389,9 @@ function App() {
   const [showAdmin, setShowAdmin] = useState(false);
   const [showUsersPanel, setShowUsersPanel] = useState(false);
   const [showNotificationsPanel, setShowNotificationsPanel] = useState(false);
+  const [showFriendRequests, setShowFriendRequests] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [friendRequestCount, setFriendRequestCount] = useState(0);
 
   const [routeMode, setRouteMode] = useState("safe");
   const [travelTimes, setTravelTimes] = useState(null);
@@ -545,6 +546,7 @@ function App() {
     }
   }, [username]);
 
+  // Polling za notifikacije
   useEffect(() => {
     if (!username) {
       setUnreadCount(0);
@@ -555,7 +557,23 @@ function App() {
 
     const interval = setInterval(() => {
       loadUnreadCount();
-    }, 15000); // svakih 15 sekundi
+    }, 15000);
+
+    return () => clearInterval(interval);
+  }, [username]);
+
+  // Polling za zahteve za prijateljstvo
+  useEffect(() => {
+    if (!username) {
+      setFriendRequestCount(0);
+      return;
+    }
+
+    loadFriendRequestCount();
+
+    const interval = setInterval(() => {
+      loadFriendRequestCount();
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [username]);
@@ -582,6 +600,19 @@ function App() {
     setUnreadCount(unread);
   };
 
+  const loadFriendRequestCount = async () => {
+    if (!username) {
+      setFriendRequestCount(0);
+      return;
+    }
+    try {
+      const data = await getPendingFriendRequests();
+      setFriendRequestCount(Array.isArray(data) ? data.length : 0);
+    } catch {
+      setFriendRequestCount(0);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("username");
@@ -592,6 +623,7 @@ function App() {
     setRole(null);
     setRatedLocations([]);
     setUnreadCount(0);
+    setFriendRequestCount(0);
   };
 
   const clearRoute = () => {
@@ -740,6 +772,23 @@ function App() {
                       onClick={() => setShowUsersPanel(true)}
                     >
                       <i className="ti ti-users" aria-hidden="true"></i>
+                    </button>
+
+                    <button
+                      className="hb-icon-btn hb-notif-btn"
+                      aria-label="Zahtevi za prijateljstvo"
+                      title="Zahtevi za prijateljstvo"
+                      onClick={() => {
+                        loadFriendRequestCount();
+                        setShowFriendRequests(true);
+                      }}
+                    >
+                      <i className="ti ti-user-plus" aria-hidden="true"></i>
+                      {friendRequestCount > 0 && (
+                        <span className="hb-notif-dot">
+                          {friendRequestCount > 9 ? "9+" : friendRequestCount}
+                        </span>
+                      )}
                     </button>
 
                     <button
@@ -1168,8 +1217,7 @@ function App() {
             <UserSearchPanel
               onClose={() => setShowUsersPanel(false)}
               onFriendAdded={() => {
-                setShowUsersPanel(false);
-                toast.success("Dodato u prijatelje");
+                toast.success("Zahtev za prijateljstvo je poslat!");
               }}
             />
           )}
@@ -1178,6 +1226,18 @@ function App() {
             <NotificationsPanel
               onClose={() => setShowNotificationsPanel(false)}
               onUnreadChange={(count) => setUnreadCount(count)}
+            />
+          )}
+
+          {showFriendRequests && (
+            <FriendRequestsPanel
+              onClose={() => setShowFriendRequests(false)}
+              onRequestResponded={(accepted) => {
+                if (accepted)
+                  toast.success("Prihvatio/la si zahtev za prijateljstvo!");
+                else toast.info("Odbio/la si zahtev.");
+                setFriendRequestCount((c) => Math.max(0, c - 1));
+              }}
             />
           )}
 
