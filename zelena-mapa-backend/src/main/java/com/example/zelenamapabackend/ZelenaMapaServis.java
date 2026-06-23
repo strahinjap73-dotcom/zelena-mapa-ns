@@ -144,6 +144,21 @@ public class ZelenaMapaServis {
         return ratingRepo.save(rating);
     }
 
+    //izmena lokacije
+    public Location updateLocation(Long locationId, Location updatedLocation) {
+        Location location = locationRepo.findById(locationId)
+                .orElseThrow(() -> new RuntimeException("Location not found"));
+
+        location.setName(updatedLocation.getName());
+        location.setDescription(updatedLocation.getDescription());
+        location.setLat(updatedLocation.getLat());
+        location.setLng(updatedLocation.getLng());
+        location.setStatus(updatedLocation.getStatus());
+        location.setPrivateLocation(updatedLocation.isPrivateLocation());
+
+        return locationRepo.save(location);
+    }
+
     // 📊 GET ALL RATINGS FOR LOCATION
     public List<Rating> getRatings(Long locationId) {
         return ratingRepo.findByLocationId(locationId);
@@ -155,7 +170,7 @@ public class ZelenaMapaServis {
         List<Rating> ratings = ratingRepo.findByLocationId(locationId);
 
         return ratings.stream()
-                .mapToDouble(Rating::getAverage)
+                .mapToDouble(Rating::getRating)
                 .average()
                 .orElse(0.0);
     }

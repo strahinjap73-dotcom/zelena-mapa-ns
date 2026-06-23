@@ -56,6 +56,17 @@ public class ZelenaMapaKontroler {
         return service.addRating(id, ratingRequest, principal.getName());
     }
 
+    //izmena lokacije
+    @PutMapping("/admin/locations/{locationId}")
+    public ResponseEntity<Location> updateLocation(
+            @PathVariable Long locationId,
+            @RequestBody Location location) {
+
+        return ResponseEntity.ok(
+                service.updateLocation(locationId, location)
+        );
+    }
+
     // 📊 GET RATINGS
     @GetMapping("/{id}/ratings")
     public List<Rating> getRatings(@PathVariable Long id) {
