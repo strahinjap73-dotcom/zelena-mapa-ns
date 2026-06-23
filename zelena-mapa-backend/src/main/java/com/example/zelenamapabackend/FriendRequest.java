@@ -1,5 +1,6 @@
 package com.example.zelenamapabackend;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -17,10 +18,12 @@ public class FriendRequest {
 
     @ManyToOne
     @JoinColumn(name = "sender_id")
+    @JsonIgnoreProperties({"friends", "password", "email", "role", "hibernateLazyInitializer"})
     private User sender;
 
     @ManyToOne
     @JoinColumn(name = "receiver_id")
+    @JsonIgnoreProperties({"friends", "password", "email", "role", "hibernateLazyInitializer"})
     private User receiver;
 
     @Enumerated(EnumType.STRING)
