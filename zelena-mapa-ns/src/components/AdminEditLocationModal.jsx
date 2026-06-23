@@ -31,6 +31,7 @@ function AdminEditLocationModal({ location, onClose, onUpdated }) {
       description: description.trim(),
       lat: parsedLat,
       lng: parsedLng,
+      status: "APPROVED",
     });
 
     toast.success("Lokacija uspešno izmenjena!");
