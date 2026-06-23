@@ -41,6 +41,7 @@ import { toast } from "react-toastify";
 import RecommendModal from "./components/RecommendModal";
 import ImageSlider from "./components/ImageSlider";
 import ReportModal from "./components/ReportModal";
+import AdminEditLocationModal from "./components/AdminEditLocationModal";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -366,6 +367,7 @@ function RouteLayer({ routeCoords, routeMode }) {
 
 function App() {
   const [recommendLocation_loc, setRecommendLocation_loc] = useState(null);
+  const [adminEditLocation, setAdminEditLocation] = useState(null);
   const [locations, setLocations] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState(null);
@@ -1206,13 +1208,22 @@ function App() {
                           Preporuci prijatelju
                         </button>
                         {role === "ADMIN" && (
-                          <button
-                            className="delete-btn"
-                            onClick={() => handleDeleteLocation(loc.id)}
-                          >
-                            🗑 Obrisi lokaciju
-                          </button>
-                        )}
+  <>
+    <button
+      className="btn-confirm"
+      style={{ marginTop: 4 }}
+      onClick={() => setAdminEditLocation(loc)}
+    >
+      ✏️ Izmeni lokaciju
+    </button>
+    <button
+      className="delete-btn"
+      onClick={() => handleDeleteLocation(loc.id)}
+    >
+      🗑 Obrisi lokaciju
+    </button>
+  </>
+)}
                       </div>
                     </div>
                   </Popup>
@@ -1328,6 +1339,17 @@ function App() {
               onClose={() => setRecommendLocation_loc(null)}
             />
           )}
+
+          {adminEditLocation && (
+  <AdminEditLocationModal
+    location={adminEditLocation}
+    onClose={() => setAdminEditLocation(null)}
+    onUpdated={() => {
+      setAdminEditLocation(null);
+      loadLocationsWithRatings();
+    }}
+  />
+)}
 
           {showAdmin && (
             <AdminPanel

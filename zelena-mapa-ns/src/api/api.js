@@ -228,6 +228,30 @@ export const getPendingFriendRequests = async () => {
   return res.json();
 };
 
+export const submitEditRequest = async (locationId, description) => {
+  const res = await fetch(`${BASE_URL}/api/${locationId}/edit-request`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeader() },
+    body: JSON.stringify({ description }),
+  });
+  if (!res.ok) throw new Error("Failed to submit edit request");
+  return res.json();
+};
+
+export const adminUpdateLocation = async (locationId, data) => {
+  const res = await fetch(`${BASE_URL}/api/admin/locations/${locationId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...authHeader() },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Failed to update location");
+  }
+  return res.json();
+};
+
+
 export const respondToFriendRequest = async (requestId, accept) => {
   const res = await fetch(
     `${BASE_URL}/api/friend-requests/${requestId}/${accept ? "accept" : "reject"}`,
