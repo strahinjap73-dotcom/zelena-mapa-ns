@@ -11,7 +11,7 @@ import java.util.List;
 @RequestMapping("/api")
 @CrossOrigin(origins = "*")
 public class ZelenaMapaKontroler {
-
+   
     private final ZelenaMapaServis service;
 
     public ZelenaMapaKontroler(ZelenaMapaServis service) {
@@ -135,5 +135,30 @@ public class ZelenaMapaKontroler {
     public Notification markNotificationRead(@PathVariable Long id, java.security.Principal principal) {
         if (principal == null) throw new RuntimeException("Morate biti prijavljeni");
         return service.markNotificationRead(id, principal.getName());
+    }
+
+    
+    @PostMapping("/friend-requests/{receiverId}")
+    public FriendRequest sendFriendRequest(@PathVariable Long receiverId, java.security.Principal principal) {
+        if (principal == null) throw new RuntimeException("Morate biti prijavljeni");
+        return service.sendFriendRequest(principal.getName(), receiverId);
+    }
+
+    @GetMapping("/friend-requests/pending")
+    public List<FriendRequest> getPendingRequests(java.security.Principal principal) {
+        if (principal == null) throw new RuntimeException("Morate biti prijavljeni");
+        return service.getPendingRequests(principal.getName());
+    }
+
+    @PutMapping("/friend-requests/{id}/accept")
+    public FriendRequest acceptRequest(@PathVariable Long id, java.security.Principal principal) {
+        if (principal == null) throw new RuntimeException("Morate biti prijavljeni");
+        return service.respondToRequest(id, true, principal.getName());
+    }
+
+    @PutMapping("/friend-requests/{id}/reject")
+    public FriendRequest rejectRequest(@PathVariable Long id, java.security.Principal principal) {
+        if (principal == null) throw new RuntimeException("Morate biti prijavljeni");
+        return service.respondToRequest(id, false, principal.getName());
     }
 }

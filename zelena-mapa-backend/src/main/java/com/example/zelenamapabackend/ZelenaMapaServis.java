@@ -1,11 +1,11 @@
 package com.example.zelenamapabackend;
 
-
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.example.zelenamapabackend.dto.RatingRequest;
 import com.example.zelenamapabackend.repository.LocationImageRepository;
 import com.example.zelenamapabackend.repository.UserRepository;
+import com.example.zelenamapabackend.repository.FriendRequestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,15 +23,24 @@ public class ZelenaMapaServis {
     private final RatingRepository ratingRepo;
     private final UserRepository userRepo;
     private final com.example.zelenamapabackend.repository.NotificationRepository notificationRepo;
+    private final FriendRequestRepository friendRequestRepository;
 
     private final Cloudinary cloudinary;
     private final LocationImageRepository imageRepository;
 
-    public ZelenaMapaServis(LocationRepository locationRepo, RatingRepository ratingRepo, UserRepository userRepo, com.example.zelenamapabackend.repository.NotificationRepository notificationRepo, Cloudinary cloudinary, LocationImageRepository imageRepository) {
+    public ZelenaMapaServis(
+            LocationRepository locationRepo,
+            RatingRepository ratingRepo,
+            UserRepository userRepo,
+            com.example.zelenamapabackend.repository.NotificationRepository notificationRepo,
+            FriendRequestRepository friendRequestRepository,
+            Cloudinary cloudinary,
+            LocationImageRepository imageRepository) {
         this.locationRepo = locationRepo;
         this.ratingRepo = ratingRepo;
         this.userRepo = userRepo;
         this.notificationRepo = notificationRepo;
+        this.friendRequestRepository = friendRequestRepository;
         this.cloudinary = cloudinary;
         this.imageRepository = imageRepository;
     }
@@ -250,5 +259,61 @@ public class ZelenaMapaServis {
         if (!n.getToUser().getEmail().equals(userEmail)) throw new RuntimeException("Nije ovlašćenje");
         n.setReadFlag(true);
         return notificationRepo.save(n);
+    }
+
+    public FriendRequest sendFriendRequest(String senderUsername, Long receiverId) {
+        User sender = userRepo.findByUsername(senderUsername)
+                .orElseThrow(() -> new RuntimeException("Korisnik ne postoji"));
+        User receiver = userRepo.findById(receiverId)
+                .orElseThrow(() -> new RuntimeException("Primalac ne postoji"));
+
+        if (sender.getId().equals(receiver.getId())) {
+            throw new RuntimeException("Ne mozes sebi poslati zahtev");
+        }
+        if (sender.getFriends().contains(receiver)) {
+            throw new RuntimeException("Vec ste prijatelji");
+        }
+
+        boolean alreadyPending = friendRequestRepository
+                .findBySenderIdAndReceiverIdAndStatus(sender.getId(), receiver.getId(), FriendRequest.Status.PENDING)
+                .isPresent();
+        if (alreadyPending) {
+            throw new RuntimeException("Zahtev je vec poslat");
+        }
+
+        FriendRequest request = new FriendRequest(sender, receiver);
+        return friendRequestRepository.save(request);
+    }
+
+    public List<FriendRequest> getPendingRequests(String username) {
+        User user = userRepo.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Korisnik ne postoji"));
+        return friendRequestRepository.findByReceiverIdAndStatus(user.getId(), FriendRequest.Status.PENDING);
+    }
+
+    public FriendRequest respondToRequest(Long requestId, boolean accept, String username) {
+        FriendRequest request = friendRequestRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Zahtev ne postoji"));
+
+        if (!request.getReceiver().getUsername().equals(username)) {
+            throw new RuntimeException("Nemate pravo da odgovorite na ovaj zahtev");
+        }
+        if (request.getStatus() != FriendRequest.Status.PENDING) {
+            throw new RuntimeException("Zahtev je vec obraden");
+        }
+
+        if (accept) {
+            request.setStatus(FriendRequest.Status.ACCEPTED);
+            User sender = request.getSender();
+            User receiver = request.getReceiver();
+            sender.addFriend(receiver);
+            receiver.addFriend(sender);
+            userRepo.save(sender);
+            userRepo.save(receiver);
+        } else {
+            request.setStatus(FriendRequest.Status.REJECTED);
+        }
+
+        return friendRequestRepository.save(request);
     }
 }

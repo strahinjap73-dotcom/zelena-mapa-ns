@@ -1,5 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Nunito+Sans:wght@400;600;700&display=swap");
-
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&display=swap");
 :root {
   --forest: #1b4332;
   --leaf: #52b788;
@@ -32,90 +32,313 @@ body {
 }
 
 /* ---------- HEADER ---------- */
-.header {
-  position: relative;
-  background: linear-gradient(135deg, var(--forest), #2d6a4f);
-  color: var(--cream);
-  padding: 28px 32px 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  text-align: center;
-  border-bottom-left-radius: var(--radius-lg);
-  border-bottom-right-radius: var(--radius-lg);
-  box-shadow: var(--shadow);
-}
+/* ========== HEADER B ========== */
+/* Dodaj ovo u App.css (možeš obrisati stare .header, .header-main, .header-sub, .header-nav, .header-search, .header-divider, .header-username, .btn-logout, .nav-btn, .add-location-btn blokove) */
 
-.header::before {
-  content: "🌿";
-  position: absolute;
-  top: 12px;
-  left: 28px;
-  font-size: 1.6rem;
-  opacity: 0.85;
-}
-
-.header h1 {
-  font-family: "Fraunces", serif;
-  font-weight: 700;
-  font-size: clamp(1.6rem, 4vw, 2.4rem);
-  margin: 0 0 2px;
-  letter-spacing: 0.5px;
-}
-
-.header p {
-  margin: 0 0 12px;
-  font-size: 0.98rem;
-  color: var(--leaf-light);
-  font-weight: 400;
-}
-
-.header-auth {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding-bottom: 12px;
-  padding-left: 70px;
-  padding-right: 16px;
-  max-width: calc(100% - 70px);
-}
-
-.header-auth span {
-  font-size: 0.9rem;
-  background: rgba(255, 255, 255, 0.12);
-  padding: 8px 14px;
-  border-radius: 999px;
-  font-weight: 600;
-}
-
-.header-auth input[type="text"] {
-  max-width: 280px;
-  flex: 0 1 280px;
-  padding: 10px 14px;
-  border: 1.5px solid var(--leaf-light);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.95);
-  color: var(--ink);
+.header-b {
+  background: #1a3d2b;
+  flex-shrink: 0;
   font-family: "Nunito Sans", sans-serif;
-  font-size: 0.92rem;
+}
+
+.header-b-main {
+  padding: 13px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.header-b-titles {
+  text-align: center;
+}
+
+.header-b-leaf {
+  position: absolute;
+  left: 24px;
+  font-size: 22px;
+}
+
+.header-b-actions {
+  position: absolute;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.header-b-title {
+  font-family: "Fraunces", serif;
+  color: #fff;
+  font-size: 19px;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+}
+
+.header-b-desc {
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 11.5px;
+  margin: 3px 0 0;
+  letter-spacing: 0.01em;
+}
+
+/* Icon buttons */
+.hb-icon-btn {
+  background: rgba(255, 255, 255, 0.07);
+  border: 0.5px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  padding: 7px 9px;
+  font-size: 17px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition:
+    background 0.15s,
+    color 0.15s;
+  font-family: "Nunito Sans", sans-serif;
+}
+
+.hb-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.hb-icon-btn:active {
+  transform: scale(0.96);
+}
+
+/* Notification dot */
+.hb-notif-btn {
+  position: relative;
+}
+
+.hb-notif-dot {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #e74c3c;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 1px 4px;
+  border: 1.5px solid #1a3d2b;
+  line-height: 1.4;
+}
+
+/* Divider */
+.hb-divider {
+  width: 0.5px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.18);
+  margin: 0 2px;
+}
+
+/* Username */
+.hb-username {
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+/* Logout button */
+.hb-logout-btn {
+  background: rgba(231, 76, 60, 0.18);
+  border: 0.5px solid rgba(231, 76, 60, 0.35);
+  color: #f08070;
+  border-radius: 8px;
+  padding: 7px 13px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition:
+    background 0.15s,
+    color 0.15s;
+  font-family: "Nunito Sans", sans-serif;
+}
+
+.hb-logout-btn:hover {
+  background: rgba(231, 76, 60, 0.3);
+  color: #ffb3a7;
+}
+
+.hb-logout-btn:active {
+  transform: scale(0.97);
+}
+
+/* Login / Register (neprijavljen korisnik) */
+.hb-login-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 0.5px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+  font-family: "Nunito Sans", sans-serif;
+}
+
+.hb-login-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.hb-reg-btn {
+  background: #52b788;
+  border: none;
+  color: #1b4332;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: "Nunito Sans", sans-serif;
+}
+
+.hb-reg-btn:hover {
+  background: #6fce9d;
+}
+
+/* Search traka */
+.header-b-search {
+  background: #14301f;
+  padding: 9px 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.header-b-search-wrap {
+  position: relative;
+}
+
+.header-b-search-wrap i {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 15px;
+  pointer-events: none;
+}
+
+.header-b-search-wrap input {
+  width: 400px;
+  max-width: 100%;
+  background: rgba(255, 255, 255, 0.14);
+  border: 0.5px solid rgba(255, 255, 255, 0.25);
+  border-radius: 20px;
+  padding: 8px 14px 8px 34px;
+  color: #fff;
+  font-size: 13px;
   outline: none;
+  font-family: "Nunito Sans", sans-serif;
+  box-sizing: border-box;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 
-.header-auth input[type="text"]::placeholder {
-  color: #999;
+.header-b-search-wrap input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
 }
 
-.header-auth input[type="text"]:focus {
-  background: white;
-  border-color: white;
+.header-b-search-wrap input:focus {
+  border-color: rgba(82, 183, 136, 0.6);
+  background: rgba(255, 255, 255, 0.18);
 }
 
+.header-b-search-wrap input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.header-b-search-wrap input:focus {
+  border-color: rgba(82, 183, 136, 0.5);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Fraunces font — dodaj u index.html ili importuj u App.css ako već nije: */
+/*  */
+
+/* =============================== */
+
+.btn-logout {
+  background: #e74c3c;
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-logout:hover {
+  background: #c0392b;
+}
+
+.header-sub {
+  background: #14301f;
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-sub-text {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.header-sub-text i {
+  color: #6fcf97;
+  font-size: 16px;
+}
+
+.add-location-btn {
+  background: #6fcf97;
+  color: #14301f;
+  border: none;
+  border-radius: 20px;
+  padding: 7px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.add-location-btn:hover {
+  background: #5ab882;
+}
+
+.picking-hint {
+  background: #0f2318;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+  padding: 8px 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.picking-cancel-btn {
+  margin-left: 4px;
+}
 /* ---------- BUTTONS ---------- */
 button {
   font-family: "Nunito Sans", sans-serif;
@@ -125,7 +348,10 @@ button {
   border-radius: 999px;
   padding: 10px 20px;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
 }
 
 button:active {
@@ -526,7 +752,9 @@ button:active {
   background: white;
   color: var(--ink);
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .modal input::placeholder {
@@ -549,7 +777,9 @@ button:active {
   outline: none;
   resize: vertical;
   min-height: 70px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .modal textarea:focus {
@@ -614,17 +844,17 @@ button:active {
   .header {
     padding: 50px 16px 16px;
   }
-  
+
   .header::before {
     top: 10px;
   }
-  
+
   .header-auth {
     position: relative;
     width: 100%;
     padding: 12px 0;
   }
-  
+
   .header-auth input[type="text"],
   .header-auth span,
   .header-auth button {
@@ -632,30 +862,24 @@ button:active {
     font-size: 0.85rem;
     padding: 8px 12px;
   }
-  
+
   .map {
     min-height: 50vh;
   }
-  
+
   .modal {
     max-width: 90%;
   }
 }
 
-.picking-hint {
-  margin-top: 8px;
-  padding: 8px 16px;
-  background: #fff3cd;
-  border: 1px solid #ffeeba;
-  border-radius: 6px;
-  color: #856404;
-  font-weight: 500;
-  animation: pulse 1.5s infinite;
-}
-
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
 }
 
 .picking-mode {
@@ -678,7 +902,6 @@ button:active {
   margin-top: 6px;
 }
 
-
 /* Banner koji se prikazuje tokom navigacije */
 .route-banner {
   position: fixed;
@@ -694,7 +917,7 @@ button:active {
   align-items: center;
   gap: 12px;
   font-size: 14px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   max-width: 90vw;
   white-space: nowrap;
   overflow: hidden;
@@ -717,7 +940,7 @@ button:active {
 }
 
 .route-clear-btn {
-  background: rgba(255,255,255,0.15);
+  background: rgba(255, 255, 255, 0.15);
   border: none;
   color: inherit;
   border-radius: 6px;
@@ -730,7 +953,7 @@ button:active {
 }
 
 .route-clear-btn:hover {
-  background: rgba(255,255,255,0.28);
+  background: rgba(255, 255, 255, 0.28);
 }
 
 /* Dugme "Directions" u popupu */
@@ -748,7 +971,9 @@ button:active {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  transition: background 0.15s, transform 0.1s;
+  transition:
+    background 0.15s,
+    transform 0.1s;
 }
 
 .directions-btn:hover {
@@ -770,9 +995,15 @@ button:active {
 
 /* Pulse animacija na markeru A (opciono) */
 @keyframes pulse-a {
-  0%   { box-shadow: 0 0 0 0 rgba(26,115,232,0.5); }
-  70%  { box-shadow: 0 0 0 10px rgba(26,115,232,0); }
-  100% { box-shadow: 0 0 0 0 rgba(26,115,232,0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(26, 115, 232, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(26, 115, 232, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(26, 115, 232, 0);
+  }
 }
 
 .spinner {
@@ -814,8 +1045,15 @@ button:active {
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.1); opacity: 0.9; }
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.9;
+  }
 }
 
 /* ---------- USER SEARCH PANEL ---------- */
@@ -954,7 +1192,6 @@ button:active {
   background: #d0b8a3;
 }
 
-
 .popup-image-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -975,14 +1212,47 @@ button:active {
   transform: scale(1.05);
 }
 
-.already-friend { color: #2d6a4f; font-weight: bold; font-size: 13px; }
+.already-friend {
+  color: #2d6a4f;
+  font-weight: bold;
+  font-size: 13px;
+}
 
-.recommend-modal { max-width: 400px; }
-.recommend-location-name { font-weight: bold; margin-bottom: 12px; color: #2d6a4f; }
-.recommend-friends-list { display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto; }
-.recommend-friend-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f5f5f5; border-radius: 8px; }
-.recommend-send-btn { background: #2d6a4f; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
-.recommend-send-btn:disabled { background: #aaa; cursor: default; }
+.recommend-modal {
+  max-width: 400px;
+}
+.recommend-location-name {
+  font-weight: bold;
+  margin-bottom: 12px;
+  color: #2d6a4f;
+}
+.recommend-friends-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+.recommend-friend-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+.recommend-send-btn {
+  background: #2d6a4f;
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.recommend-send-btn:disabled {
+  background: #aaa;
+  cursor: default;
+}
 
 .popup-file-label {
   cursor: pointer;
@@ -1031,7 +1301,7 @@ button:active {
   max-height: 80vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
   overflow: hidden;
 }
 
@@ -1040,7 +1310,7 @@ button:active {
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .admin-header h2 {
@@ -1057,7 +1327,9 @@ button:active {
   cursor: pointer;
   line-height: 1;
 }
-.admin-close-btn:hover { color: #fff; }
+.admin-close-btn:hover {
+  color: #fff;
+}
 
 .admin-body {
   overflow-y: auto;
@@ -1075,8 +1347,8 @@ button:active {
 
 /* ── Card ── */
 .admin-card {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
   padding: 14px;
   display: flex;
@@ -1116,23 +1388,29 @@ button:active {
   background: #2d6a4f;
   color: #fff;
 }
-.admin-approve-btn:hover { background: #1e4d38; }
+.admin-approve-btn:hover {
+  background: #1e4d38;
+}
 
 .admin-reject-btn {
   background: #b91c1c;
   color: #fff;
 }
-.admin-reject-btn:hover { background: #991b1b; }
+.admin-reject-btn:hover {
+  background: #991b1b;
+}
 
 .admin-images-btn {
-  background: rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.1);
   color: #ddd;
 }
-.admin-images-btn:hover { background: rgba(255,255,255,0.18); }
+.admin-images-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
 
 /* ── Images section ── */
 .admin-images-section {
-  border-top: 1px solid rgba(255,255,255,0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding-top: 10px;
 }
 
@@ -1161,13 +1439,15 @@ button:active {
   cursor: zoom-in;
   transition: opacity 0.2s;
 }
-.admin-thumb:hover { opacity: 0.8; }
+.admin-thumb:hover {
+  opacity: 0.8;
+}
 
 .admin-delete-img-btn {
   position: absolute;
   top: 3px;
   right: 3px;
-  background: rgba(0,0,0,0.65);
+  background: rgba(0, 0, 0, 0.65);
   border: none;
   border-radius: 4px;
   color: #fff;
@@ -1176,13 +1456,15 @@ button:active {
   cursor: pointer;
   line-height: 1;
 }
-.admin-delete-img-btn:hover { background: #b91c1c; }
+.admin-delete-img-btn:hover {
+  background: #b91c1c;
+}
 
 /* ── Lightbox ── */
 .lightbox-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.85);
+  background: rgba(0, 0, 0, 0.85);
   z-index: 2000;
   display: flex;
   align-items: center;
@@ -1193,7 +1475,7 @@ button:active {
   max-width: 90vw;
   max-height: 85vh;
   border-radius: 10px;
-  box-shadow: 0 4px 40px rgba(0,0,0,0.8);
+  box-shadow: 0 4px 40px rgba(0, 0, 0, 0.8);
   object-fit: contain;
 }
 
@@ -1201,7 +1483,7 @@ button:active {
   position: fixed;
   top: 20px;
   right: 24px;
-  background: rgba(255,255,255,0.15);
+  background: rgba(255, 255, 255, 0.15);
   border: none;
   color: #fff;
   font-size: 22px;
@@ -1213,7 +1495,9 @@ button:active {
   align-items: center;
   justify-content: center;
 }
-.lightbox-close:hover { background: rgba(255,255,255,0.3); }
+.lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
 
 /* ===== ConfirmModal ===== */
 /* Dodaj ovo u App.css */
@@ -1259,4 +1543,288 @@ button:active {
 
 .btn-danger:hover {
   background: #b91c1c;
+}
+
+.picking-cancel-btn {
+  margin-left: 12px;
+}
+
+/* rute */
+.route-mode-selector {
+  margin-bottom: 8px;
+}
+
+.route-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  width: auto;
+}
+
+.toggle-track {
+  width: 36px !important;
+  height: 20px !important;
+  border-radius: 999px;
+  background: #d1d5db;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+  border: none;
+  padding: 0;
+}
+
+.route-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content !important;
+}
+
+.toggle-track.on {
+  background: #52b788;
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-track.on .toggle-thumb {
+  transform: translateX(16px);
+}
+
+.toggle-text {
+  font-size: 0.82rem;
+  color: #555;
+  white-space: nowrap;
+}
+
+.route-mode-label {
+  font-size: 0.82rem;
+  color: #555;
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+
+.toggle-text strong {
+  color: #1b4332;
+}
+
+.popup-slider {
+  margin: -8px -8px 8px -8px;
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
+}
+
+.popup-slider-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80px;
+  background: rgba(0, 0, 0, 0.04);
+  margin: -8px -8px 8px -8px;
+  border-radius: 8px 8px 0 0;
+}
+
+.popup-slider-empty p {
+  margin: 0;
+  font-size: 12px;
+  color: #888;
+}
+
+.popup-slider-image-wrap {
+  position: relative;
+  width: 100%;
+  height: 140px;
+  background: #eee;
+}
+
+.popup-slider-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.popup-slider-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.45);
+  color: white;
+  border: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.popup-slider-btn-prev {
+  left: 6px;
+}
+
+.popup-slider-btn-next {
+  right: 6px;
+}
+
+.popup-slider-dots {
+  position: absolute;
+  bottom: 6px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+}
+
+.popup-slider-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+}
+
+.popup-slider-dot.active {
+  background: white;
+}
+.notif-modal {
+  width: 380px;
+  max-width: 90vw;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: 70vh;
+}
+
+.notif-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.notif-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.notif-count-badge {
+  background: #ef4444;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 2px 8px;
+  line-height: 1.4;
+}
+
+.notif-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.notif-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 40px 16px;
+  color: #888;
+  text-align: center;
+}
+
+.notif-empty p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.notif-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.025);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.notif-item-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.notif-message {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #222;
+  word-break: break-word;
+}
+
+.notif-date {
+  font-size: 11.5px;
+  color: #999;
+}
+
+.notif-read-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+  background: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.notif-read-btn:hover {
+  background: #15803d;
+}
+
+.notif-footer {
+  padding: 10px 14px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.notif-close-btn {
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  color: #444;
+}
+
+.notif-close-btn:hover {
+  background: rgba(0, 0, 0, 0.09);
 }

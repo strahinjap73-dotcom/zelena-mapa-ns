@@ -1,9 +1,30 @@
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap, Circle, Polyline } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  useMapEvents,
+  useMap,
+  Circle,
+  Polyline,
+} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useEffect, useState, useRef } from "react";
 import "./App.css";
-import { getLocations, getAverageRating, getRatings, addLocation, login, register, uploadLocationImage, getFriends, recommendLocation, getNotifications, getImages } from "./api/api";
+import {
+  getLocations,
+  getAverageRating,
+  getRatings,
+  addLocation,
+  login,
+  register,
+  uploadLocationImage,
+  getFriends,
+  recommendLocation,
+  getNotifications,
+  getImages,
+} from "./api/api";
 import AddLocationModal from "./components/AddLocationModal";
 import LoginModal from "./components/LoginModal";
 import RegisterModal from "./components/RegisterModal";
@@ -16,12 +37,13 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { toast } from "react-toastify";
 import RecommendModal from "./components/RecommendModal";
-
+import ImageSlider from "./components/ImageSlider";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
@@ -69,7 +91,6 @@ const getIconForRating = (avgRating) => {
   return redIcon;
 };
 
-// Haversine distance in meters between two [lat,lng] points
 function haversineDistance(a, b) {
   const R = 6371000;
   const toRad = (d) => (d * Math.PI) / 180;
@@ -83,12 +104,12 @@ function haversineDistance(a, b) {
   return 2 * R * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
 }
 
-// Minimum distance from point P to segment AB (all as [lat,lng])
 function pointToSegmentDistance(P, A, B) {
   const [px, py] = [P[0], P[1]];
   const [ax, ay] = [A[0], A[1]];
   const [bx, by] = [B[0], B[1]];
-  const dx = bx - ax, dy = by - ay;
+  const dx = bx - ax,
+    dy = by - ay;
   const lenSq = dx * dx + dy * dy;
   if (lenSq === 0) return haversineDistance(P, A);
   let t = ((px - ax) * dx + (py - ay) * dy) / lenSq;
@@ -97,7 +118,6 @@ function pointToSegmentDistance(P, A, B) {
   return haversineDistance(P, closest);
 }
 
-// Check if a polyline route passes within `radius` meters of any red location
 function routePassesThroughBadZone(routeCoords, badLocations, radius = 250) {
   for (const bad of badLocations) {
     const badPt = [bad.lat, bad.lng];
@@ -112,21 +132,53 @@ function routePassesThroughBadZone(routeCoords, badLocations, radius = 250) {
   return false;
 }
 
-// Fetch route from OSRM between two points, optionally avoiding waypoints
+// OSRM se koristi samo za geometriju i distancu — uvek foot profil
 async function fetchOSRMRoute(from, to, waypoints = []) {
-  const coords = [[from.lng, from.lat], ...waypoints.map((w) => [w.lng, w.lat]), [to.lng, to.lat]];
+  const coords = [
+    [from.lng, from.lat],
+    ...waypoints.map((w) => [w.lng, w.lat]),
+    [to.lng, to.lat],
+  ];
   const coordStr = coords.map((c) => c.join(",")).join(";");
   const url = `https://router.project-osrm.org/route/v1/foot/${coordStr}?overview=full&geometries=geojson&steps=false`;
   const res = await fetch(url);
   const data = await res.json();
-  if (!data.routes || data.routes.length === 0) throw new Error("No route found");
-  const geom = data.routes[0].geometry.coordinates;
-  return geom.map(([lng, lat]) => ({ lat, lng }));
+  if (!data.routes || data.routes.length === 0)
+    throw new Error("No route found");
+  const route = data.routes[0];
+  return {
+    coords: route.geometry.coordinates.map(([lng, lat]) => ({ lat, lng })),
+    distance: route.distance,
+  };
 }
 
-// Generate candidate detour waypoints around a bad location at roughly `radius` meters
+// Vremena se racunaju iz distance konstantnim brzinama
+// foot: 5 km/h, bike: 15 km/h, car: 50 km/h
+function calcTravelTimes(distanceMeters) {
+  const km = distanceMeters / 1000;
+  return {
+    foot: { duration: (km / 5) * 3600, distance: distanceMeters },
+    bike: { duration: (km / 15) * 3600, distance: distanceMeters },
+    car: { duration: (km / 50) * 3600, distance: distanceMeters },
+  };
+}
+
+function formatDuration(seconds) {
+  const mins = Math.round(seconds / 60);
+  if (mins < 1) return "< 1 min";
+  if (mins < 60) return `${mins} min`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m > 0 ? `${h} h ${m} min` : `${h} h`;
+}
+
+function formatDistance(meters) {
+  if (meters < 1000) return `${Math.round(meters)} m`;
+  return `${(meters / 1000).toFixed(1)} km`;
+}
+
 function generateDetourCandidates(badLoc, radius) {
-  const R = 6371000; // earth radius in meters
+  const R = 6371000;
   const candidates = [];
   const bearings = [0, 45, 90, 135, 180, 225, 270, 315];
   const lat1 = (badLoc.lat * Math.PI) / 180;
@@ -136,82 +188,154 @@ function generateDetourCandidates(badLoc, radius) {
   for (const b of bearings) {
     const bearing = (b * Math.PI) / 180;
     const lat2 = Math.asin(
-      Math.sin(lat1) * Math.cos(angDist) + Math.cos(lat1) * Math.sin(angDist) * Math.cos(bearing)
+      Math.sin(lat1) * Math.cos(angDist) +
+        Math.cos(lat1) * Math.sin(angDist) * Math.cos(bearing),
     );
     const lon2 =
       lon1 +
       Math.atan2(
         Math.sin(bearing) * Math.sin(angDist) * Math.cos(lat1),
-        Math.cos(angDist) - Math.sin(lat1) * Math.sin(lat2)
+        Math.cos(angDist) - Math.sin(lat1) * Math.sin(lat2),
       );
-
-    candidates.push({ lat: (lat2 * 180) / Math.PI, lng: (lon2 * 180) / Math.PI });
+    candidates.push({
+      lat: (lat2 * 180) / Math.PI,
+      lng: (lon2 * 180) / Math.PI,
+    });
   }
 
   return candidates;
 }
 
-// Smart routing: find a route from A to B that avoids red zones
+async function findShortestRoute(from, to) {
+  const result = await fetchOSRMRoute(from, to);
+  return {
+    route: result.coords,
+    safe: null,
+    warning: null,
+    travelTimes: calcTravelTimes(result.distance),
+  };
+}
+
 async function findSafeRoute(from, to, allLocations) {
-  const badLocations = allLocations.filter((l) => l.averageRating > 0 && l.averageRating <= 3);
+  const badLocations = allLocations.filter(
+    (l) => l.averageRating > 0 && l.averageRating <= 3,
+  );
   const BAD_ZONE_RADIUS = 250;
-  const DETOUR_RADIUS = 400;
 
-  let route = await fetchOSRMRoute(from, to);
-  if (!routePassesThroughBadZone(route, badLocations, BAD_ZONE_RADIUS)) {
-    return { route, safe: true, warning: null };
-  }
-
-  const violated = badLocations.filter((bad) => {
-    const badPt = [bad.lat, bad.lng];
-    for (let i = 0; i < route.length - 1; i++) {
-      const segA = [route[i].lat, route[i].lng];
-      const segB = [route[i + 1].lat, route[i + 1].lng];
-      if (pointToSegmentDistance(badPt, segA, segB) < BAD_ZONE_RADIUS) return true;
+  async function findSafeForFoot() {
+    const directResult = await fetchOSRMRoute(from, to);
+    if (
+      !routePassesThroughBadZone(
+        directResult.coords,
+        badLocations,
+        BAD_ZONE_RADIUS,
+      )
+    ) {
+      return directResult;
     }
-    return false;
-  });
 
-  for (const bad of violated) {
-    const candidates = generateDetourCandidates(bad, DETOUR_RADIUS);
-    for (const waypoint of candidates) {
-      try {
-        const detourRoute = await fetchOSRMRoute(from, to, [waypoint]);
-        if (!routePassesThroughBadZone(detourRoute, badLocations, BAD_ZONE_RADIUS)) {
-          return { route: detourRoute, safe: true, warning: null };
+    const violated = badLocations.filter((bad) => {
+      const badPt = [bad.lat, bad.lng];
+      for (let i = 0; i < directResult.coords.length - 1; i++) {
+        const segA = [directResult.coords[i].lat, directResult.coords[i].lng];
+        const segB = [
+          directResult.coords[i + 1].lat,
+          directResult.coords[i + 1].lng,
+        ];
+        if (pointToSegmentDistance(badPt, segA, segB) < BAD_ZONE_RADIUS)
+          return true;
+      }
+      return false;
+    });
+
+    const detourRadii = [400, 600, 900, 1300, 1800, 2500, 3500];
+    for (const radius of detourRadii) {
+      for (const bad of violated) {
+        const candidates = generateDetourCandidates(bad, radius);
+        for (const waypoint of candidates) {
+          try {
+            const detourResult = await fetchOSRMRoute(from, to, [waypoint]);
+            if (
+              !routePassesThroughBadZone(
+                detourResult.coords,
+                badLocations,
+                BAD_ZONE_RADIUS,
+              )
+            ) {
+              return detourResult;
+            }
+          } catch (e) {}
         }
-      } catch (e) {}
+      }
     }
-  }
 
-  if (violated.length >= 2) {
-    for (const bad1 of violated) {
-      for (const bad2 of violated) {
-        if (bad1 === bad2) continue;
-        const c1 = generateDetourCandidates(bad1, DETOUR_RADIUS);
-        const c2 = generateDetourCandidates(bad2, DETOUR_RADIUS);
-        for (const w1 of c1.slice(0, 4)) {
-          for (const w2 of c2.slice(0, 4)) {
-            try {
-              const detourRoute = await fetchOSRMRoute(from, to, [w1, w2]);
-              if (!routePassesThroughBadZone(detourRoute, badLocations, BAD_ZONE_RADIUS)) {
-                return { route: detourRoute, safe: true, warning: null };
+    if (violated.length >= 2) {
+      for (const radius of [600, 1000, 1500]) {
+        for (const bad1 of violated) {
+          for (const bad2 of violated) {
+            if (bad1 === bad2) continue;
+            const c1 = generateDetourCandidates(bad1, radius);
+            const c2 = generateDetourCandidates(bad2, radius);
+            for (const w1 of c1.slice(0, 4)) {
+              for (const w2 of c2.slice(0, 4)) {
+                try {
+                  const detourResult = await fetchOSRMRoute(from, to, [w1, w2]);
+                  if (
+                    !routePassesThroughBadZone(
+                      detourResult.coords,
+                      badLocations,
+                      BAD_ZONE_RADIUS,
+                    )
+                  ) {
+                    return detourResult;
+                  }
+                } catch (e) {}
               }
-            } catch (e) {}
+            }
           }
         }
       }
     }
+
+    return null;
+  }
+
+  if (badLocations.length === 0) {
+    const result = await fetchOSRMRoute(from, to);
+    return {
+      route: result.coords,
+      safe: true,
+      warning: null,
+      travelTimes: calcTravelTimes(result.distance),
+    };
+  }
+
+  const safeFootResult = await findSafeForFoot();
+
+  if (!safeFootResult) {
+    return {
+      route: null,
+      safe: false,
+      warning:
+        "Nije moguce pronaci rutu koja zaobilazi lose lokacije. Pokusaj odabrati drugu destinaciju.",
+      travelTimes: null,
+    };
   }
 
   return {
-    route,
-    safe: false,
-    warning: "Nije moguće pronaći rutu koja potpuno zaobilazi loše lokacije. Prikazana je najpribližnija ruta.",
+    route: safeFootResult.coords,
+    safe: true,
+    warning: null,
+    travelTimes: calcTravelTimes(safeFootResult.distance),
   };
 }
 
-function MapClickHandler({ isPickingLocation, setSelectedPosition, setIsPickingLocation, setIsOpen }) {
+function MapClickHandler({
+  isPickingLocation,
+  setSelectedPosition,
+  setIsPickingLocation,
+  setIsOpen,
+}) {
   useMapEvents({
     click(e) {
       if (!isPickingLocation) return;
@@ -223,8 +347,9 @@ function MapClickHandler({ isPickingLocation, setSelectedPosition, setIsPickingL
   return null;
 }
 
-function RouteLayer({ routeCoords, safe }) {
+function RouteLayer({ routeCoords, routeMode }) {
   if (!routeCoords || routeCoords.length === 0) return null;
+  const color = routeMode === "shortest" ? "#1a73e8" : "#16a34a";
   return (
     <>
       <Polyline
@@ -233,12 +358,7 @@ function RouteLayer({ routeCoords, safe }) {
       />
       <Polyline
         positions={routeCoords.map((c) => [c.lat, c.lng])}
-        pathOptions={{
-          color: safe ? "#1a73e8" : "#f59e0b",
-          weight: 5,
-          opacity: 0.9,
-          dashArray: safe ? null : "10, 8",
-        }}
+        pathOptions={{ color, weight: 5, opacity: 0.9 }}
       />
     </>
   );
@@ -252,10 +372,11 @@ function App() {
   const [isPickingLocation, setIsPickingLocation] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
-  const [username, setUsername] = useState(() => localStorage.getItem("username"));
+  const [username, setUsername] = useState(() =>
+    localStorage.getItem("username"),
+  );
   const [role, setRole] = useState(() => localStorage.getItem("role"));
 
-  //Mladen NOVO: Stanje za praćenje ocenjenih lokacija za trenutnog korisnika
   const [ratedLocations, setRatedLocations] = useState([]);
 
   const [directionsMode, setDirectionsMode] = useState(false);
@@ -271,21 +392,17 @@ function App() {
   const [showNotificationsPanel, setShowNotificationsPanel] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  //Strahinja, state za izbor slike za upload
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [routeMode, setRouteMode] = useState("safe");
+  const [travelTimes, setTravelTimes] = useState(null);
 
-  //Strahinja, sve slike za odredjenu lokaciju
+  const [selectedFile, setSelectedFile] = useState(null);
   const [imagesByLocation, setImagesByLocation] = useState({});
   const [ratingsByLocation, setRatingsByLocation] = useState({});
-
-  //Strahinja, pretraga po nazivu
   const [search, setSearch] = useState("");
-  //Strahinja, loading
   const [loading, setLoading] = useState(false);
   const [loadingImages, setLoadingImages] = useState({});
   const [selectedLocationId, setSelectedLocationId] = useState(null);
 
-  // ConfirmModal state
   const [confirmModal, setConfirmModal] = useState({
     open: false,
     title: "",
@@ -293,30 +410,36 @@ function App() {
     confirmText: "Potvrdi",
     variant: "default",
     onConfirm: null,
-    cancelText: "Otkaži",
+    cancelText: "Otkazi",
   });
 
   const showConfirm = (options) => {
-    setConfirmModal({ ...confirmModal, open: true, cancelText: "Otkaži", ...options });
+    setConfirmModal({
+      ...confirmModal,
+      open: true,
+      cancelText: "Otkazi",
+      ...options,
+    });
   };
 
   const closeConfirm = () => {
     setConfirmModal((prev) => ({ ...prev, open: false, onConfirm: null }));
   };
 
-  //Strahinja, ucitavanje svih slika za lokaciju sa loactionId  
   const loadImages = async (locationId) => {
     try {
       const id = String(locationId);
-      setLoadingImages(prev => ({ ...prev, [id]: true }));
+      setLoadingImages((prev) => ({ ...prev, [id]: true }));
       const data = await getImages(id);
-      const clean = Array.isArray(data) ? data.filter(img => img?.imageUrl) : [];
-      setImagesByLocation(prev => ({ ...prev, [id]: clean }));
+      const clean = Array.isArray(data)
+        ? data.filter((img) => img?.imageUrl)
+        : [];
+      setImagesByLocation((prev) => ({ ...prev, [id]: clean }));
     } catch (e) {
       console.error("loadImages error:", e);
-      setImagesByLocation(prev => ({ ...prev, [String(locationId)]: [] }));
+      setImagesByLocation((prev) => ({ ...prev, [String(locationId)]: [] }));
     } finally {
-      setLoadingImages(prev => ({ ...prev, [String(locationId)]: false }));
+      setLoadingImages((prev) => ({ ...prev, [String(locationId)]: false }));
     }
   };
 
@@ -326,7 +449,12 @@ function App() {
       if (!ratings?.length) {
         setRatingsByLocation((prev) => ({
           ...prev,
-          [locationId]: { averageDistance: 0, averageCleanliness: 0, averageGreenArea: 0, count: 0 },
+          [locationId]: {
+            averageDistance: 0,
+            averageCleanliness: 0,
+            averageGreenArea: 0,
+            count: 0,
+          },
         }));
         return;
       }
@@ -338,13 +466,15 @@ function App() {
           acc.count += 1;
           return acc;
         },
-        { distance: 0, cleanliness: 0, green: 0, count: 0 }
+        { distance: 0, cleanliness: 0, green: 0, count: 0 },
       );
       setRatingsByLocation((prev) => ({
         ...prev,
         [locationId]: {
           averageDistance: summary.count ? summary.distance / summary.count : 0,
-          averageCleanliness: summary.count ? summary.cleanliness / summary.count : 0,
+          averageCleanliness: summary.count
+            ? summary.cleanliness / summary.count
+            : 0,
           averageGreenArea: summary.count ? summary.green / summary.count : 0,
           count: summary.count,
         },
@@ -360,12 +490,11 @@ function App() {
     loadRatings(selectedLocationId);
   }, [selectedLocationId]);
 
-  //Strahinja, upload slike za lokaciju
   const uploadImage = async (locationId, file) => {
     if (!file) {
       showConfirm({
         title: "Nema slike",
-        message: "Izaberi sliku prije uploada.",
+        message: "Izaberi sliku pre uploada.",
         confirmText: "OK",
         cancelText: null,
         onConfirm: closeConfirm,
@@ -374,11 +503,11 @@ function App() {
     }
     try {
       await uploadLocationImage(locationId, file);
-      toast.success("Slika uspješno uploadovana.");
+      toast.success("Slika uspesno uploadovana.");
       setSelectedFile(null);
     } catch (err) {
       console.error(err);
-      toast.error("Upload nije uspio.");
+      toast.error("Upload nije uspeo.");
     }
   };
 
@@ -394,7 +523,7 @@ function App() {
             } catch (err) {
               return { ...loc, averageRating: 0 };
             }
-          })
+          }),
         );
         setLocations(withRatings);
       })
@@ -406,25 +535,36 @@ function App() {
     loadLocationsWithRatings();
   }, []);
 
-  //Mladen NOVO: Učitavanje već ocenjenih lokacija iz localStorage kada se username promeni
   useEffect(() => {
     if (username) {
-      // Pravimo jedinstven ključ u memoriji za svakog korisnika (npr. "rated_Marko")
-      const savedRatings = JSON.parse(localStorage.getItem(`rated_${username}`)) || [];
+      const savedRatings =
+        JSON.parse(localStorage.getItem(`rated_${username}`)) || [];
       setRatedLocations(savedRatings);
     } else {
       setRatedLocations([]);
     }
   }, [username]);
 
-  // NOVO: Funkcija koja beleži da je korisnik uspešno ocenio lokaciju
+  useEffect(() => {
+    if (!username) {
+      setUnreadCount(0);
+      return;
+    }
+
+    loadUnreadCount();
+
+    const interval = setInterval(() => {
+      loadUnreadCount();
+    }, 15000); // svakih 15 sekundi
+
+    return () => clearInterval(interval);
+  }, [username]);
+
   const handleLocationRated = (locId) => {
-    // 1. Osvježava prosečne ocene sa servera
-    toast.success("Uspješno ocijenjeno!");
+    toast.success("Uspesno ocenjeno!");
     loadLocationsWithRatings();
     loadRatings(locId);
-    
-    // 2. Upisuje u memoriju pregledača da je ovaj korisnik glasao za ovu lokaciju
+
     if (username) {
       const updatedRatings = [...ratedLocations, locId];
       setRatedLocations(updatedRatings);
@@ -433,7 +573,10 @@ function App() {
   };
 
   const loadUnreadCount = async () => {
-    if (!username) { setUnreadCount(0); return; }
+    if (!username) {
+      setUnreadCount(0);
+      return;
+    }
     const notifications = await getNotifications();
     const unread = notifications.filter((n) => !n.readFlag).length;
     setUnreadCount(unread);
@@ -444,7 +587,7 @@ function App() {
     localStorage.removeItem("username");
     localStorage.removeItem("email");
     localStorage.removeItem("role");
-    toast.success("Uspješan logout!");
+    toast.success("Uspesna odjava!");
     setUsername(null);
     setRole(null);
     setRatedLocations([]);
@@ -459,6 +602,7 @@ function App() {
     setRouteWarning(null);
     setRouteError(null);
     setDirectionsMode(false);
+    setTravelTimes(null);
   };
 
   const handleDirectionsClick = (loc) => {
@@ -468,6 +612,7 @@ function App() {
       setRouteCoords([]);
       setRouteWarning(null);
       setRouteError(null);
+      setTravelTimes(null);
       setDirectionsMode("selectB");
     }
   };
@@ -479,17 +624,37 @@ function App() {
     setRouteLoading(true);
     setRouteError(null);
     setRouteWarning(null);
+    setTravelTimes(null);
     try {
-      const { route, safe, warning } = await findSafeRoute(
-        { lat: routeFrom.lat, lng: routeFrom.lng },
-        { lat: loc.lat, lng: loc.lng },
-        locations
-      );
-      setRouteCoords(route);
-      setRouteSafe(safe);
-      setRouteWarning(warning);
+      const from = { lat: routeFrom.lat, lng: routeFrom.lng };
+      const to = { lat: loc.lat, lng: loc.lng };
+
+      if (routeMode === "shortest") {
+        const { route, travelTimes } = await findShortestRoute(from, to);
+        setRouteCoords(route);
+        setRouteSafe(null);
+        setRouteWarning(null);
+        setTravelTimes(travelTimes);
+      } else {
+        const { route, safe, warning, travelTimes } = await findSafeRoute(
+          from,
+          to,
+          locations,
+        );
+        if (!route) {
+          setRouteError(warning);
+          setRouteCoords([]);
+          setTravelTimes(null);
+        } else {
+          setRouteCoords(route);
+          setRouteSafe(safe);
+          setRouteWarning(warning);
+          setTravelTimes(travelTimes);
+        }
+      }
     } catch (e) {
-      setRouteError("Greška pri računanju rute. Pokušaj ponovo.");
+      setRouteError("Greska pri racunanju rute. Pokusaj ponovo.");
+      setTravelTimes(null);
     } finally {
       setRouteLoading(false);
     }
@@ -501,27 +666,32 @@ function App() {
     return getIconForRating(loc.averageRating);
   };
 
-  const badLocations = locations.filter((l) => l.averageRating > 0 && l.averageRating <= 3);
+  const badLocations = locations.filter(
+    (l) => l.averageRating > 0 && l.averageRating <= 3,
+  );
 
   const filteredLocations = locations.filter((location) =>
-    location.name.toLowerCase().includes(search.toLowerCase())
+    location.name.toLowerCase().includes(search.toLowerCase()),
   );
 
   const handleDeleteLocation = (id) => {
     showConfirm({
-      title: "Obriši lokaciju",
-      message: "Da li si siguran da želiš obrisati ovu lokaciju? Ova akcija se ne može poništiti.",
-      confirmText: "Obriši",
+      title: "Obrisi lokaciju",
+      message:
+        "Da li si siguran da zelis obrisati ovu lokaciju? Ova akcija se ne moze ponistiti.",
+      confirmText: "Obrisi",
       variant: "danger",
       onConfirm: async () => {
         closeConfirm();
         try {
-          await fetch(`https://zelena-mapa-ns.onrender.com/api/${id}`, { method: "DELETE" });
+          await fetch(`https://zelena-mapa-ns.onrender.com/api/${id}`, {
+            method: "DELETE",
+          });
           loadLocationsWithRatings();
           toast.success("Lokacija obrisana!");
         } catch (err) {
           console.error(err);
-          toast.error("Greška pri brisanju!");
+          toast.error("Greska pri brisanju!");
         }
       },
     });
@@ -530,84 +700,248 @@ function App() {
   return (
     <>
       {loading ? (
-        <div style={{ display: "flex", justifyContent: "center", marginTop: 50 }}>
+        <div
+          style={{ display: "flex", justifyContent: "center", marginTop: 50 }}
+        >
           <div className="spinner"></div>
         </div>
       ) : (
         <div className="app">
-          <header className="header">
-            <div className="header-auth">
-              <input
-                type="text"
-                placeholder="Pretraži po nazivu..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              {username ? (
-                <>
-                  <span>Prijavljen: {username}</span>
-                  <button onClick={() => setShowUsersPanel(true)}>Korisnici</button>
-                  <button onClick={() => { loadUnreadCount(); setShowNotificationsPanel(true); }} className="notification-btn">
-                    Obavještenja
-                    {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
-                  </button>
-                  <button className="btn-logout" onClick={handleLogout}>
-                    Odjava
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button onClick={() => setShowLogin(true)}>Prijava</button>
-                  <button onClick={() => setShowRegister(true)}>Registracija</button>
-                </>
-              )}
+          <header className="header-b">
+            <div className="header-b-main">
+              <span className="header-b-leaf">🌿</span>
+
+              <div className="header-b-titles">
+                <p className="header-b-title">Zelena mapa Novog Sada</p>
+                <p className="header-b-desc">
+                  Interaktivna mapa ekoloskih i zdravih lokacija u Novom Sadu
+                </p>
+              </div>
+
+              <div className="header-b-actions">
+                {username ? (
+                  <>
+                    <button
+                      className="hb-icon-btn"
+                      aria-label="Dodaj lokaciju"
+                      title="Dodaj lokaciju"
+                      onClick={() => {
+                        setIsPickingLocation(true);
+                        setSelectedPosition(null);
+                      }}
+                    >
+                      <i className="ti ti-plus" aria-hidden="true"></i>
+                    </button>
+
+                    <button
+                      className="hb-icon-btn"
+                      aria-label="Korisnici"
+                      title="Korisnici"
+                      onClick={() => setShowUsersPanel(true)}
+                    >
+                      <i className="ti ti-users" aria-hidden="true"></i>
+                    </button>
+
+                    <button
+                      className="hb-icon-btn hb-notif-btn"
+                      aria-label="Obavestenja"
+                      title="Obavestenja"
+                      onClick={() => {
+                        loadUnreadCount();
+                        setShowNotificationsPanel(true);
+                      }}
+                    >
+                      <i className="ti ti-bell" aria-hidden="true"></i>
+                      {unreadCount > 0 && (
+                        <span className="hb-notif-dot">
+                          {unreadCount > 9 ? "9+" : unreadCount}
+                        </span>
+                      )}
+                    </button>
+
+                    {role === "ADMIN" && (
+                      <button
+                        className="hb-icon-btn"
+                        aria-label="Admin panel"
+                        title="Admin panel"
+                        onClick={() => setShowAdmin(!showAdmin)}
+                      >
+                        <i className="ti ti-shield" aria-hidden="true"></i>
+                      </button>
+                    )}
+
+                    <div className="hb-divider" />
+                    <span className="hb-username">{username}</span>
+
+                    <button className="hb-logout-btn" onClick={handleLogout}>
+                      <i className="ti ti-logout" aria-hidden="true"></i> Odjava
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      className="hb-login-btn"
+                      onClick={() => setShowLogin(true)}
+                    >
+                      Prijava
+                    </button>
+                    <button
+                      className="hb-reg-btn"
+                      onClick={() => setShowRegister(true)}
+                    >
+                      Registracija
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
 
-            <h1>Zelena mapa Novog Sada</h1>
-            <p>Interaktivna mapa ekoloških i zdravih lokacija u Novom Sadu</p>
-
-            <button
-              className="add-location-btn"
-              onClick={() => {
-                setIsPickingLocation(true);
-                setSelectedPosition(null);
-              }}
-            >
-              + Dodaj lokaciju
-            </button>
-
-            {role === "ADMIN" && (
-              <button
-                style={{ marginLeft: "10px" }}
-                onClick={() => setShowAdmin(!showAdmin)}
-              >
-                Admin panel
-              </button>
-            )}
+            <div className="header-b-search">
+              <div className="header-b-search-wrap">
+                <i className="ti ti-search" aria-hidden="true"></i>
+                <input
+                  type="text"
+                  placeholder="Pretrazi lokacije..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+            </div>
 
             {isPickingLocation && (
               <div className="picking-hint">
-                📍 Klikni na mapu da izabereš lokaciju
+                📍 Klikni na mapu da izaberes lokaciju
+                <button
+                  className="btn-cancel picking-cancel-btn"
+                  onClick={() => {
+                    setIsPickingLocation(false);
+                    setSelectedPosition(null);
+                  }}
+                >
+                  Otkazi
+                </button>
               </div>
             )}
           </header>
 
-          {(directionsMode === "selectB" || routeLoading || routeWarning || routeError || routeCoords.length > 0) && (
+          {(directionsMode === "selectB" ||
+            routeLoading ||
+            routeWarning ||
+            routeError ||
+            routeCoords.length > 0) && (
             <div
               className={`route-banner ${
-                routeWarning ? "warning" : routeError ? "error" : routeCoords.length > 0 && routeSafe ? "success" : ""
+                routeError
+                  ? "error"
+                  : routeWarning
+                    ? "warning"
+                    : routeCoords.length > 0
+                      ? "success"
+                      : ""
               }`}
             >
               {directionsMode === "selectB" && !routeLoading && (
-                <span>📍 Polazna: <strong>{routeFrom?.name}</strong> — Klikni na odredišnu lokaciju (B)</span>
+                <span>
+                  📍 Polazna: <strong>{routeFrom?.name}</strong> — Klikni na
+                  odredisnu lokaciju (B)
+                </span>
               )}
-              {routeLoading && <span>🔄 Računam bezbednu rutu...</span>}
-              {!routeLoading && routeCoords.length > 0 && !routeWarning && !routeError && (
-                <span>✅ Bezbedna ruta: <strong>{routeFrom?.name}</strong> → <strong>{routeTo?.name}</strong></span>
+              {routeLoading && (
+                <span>
+                  🔄{" "}
+                  {routeMode === "safe"
+                    ? "Trazim sigurnu rutu..."
+                    : "Racunam najkracu rutu..."}
+                </span>
               )}
+              {!routeLoading &&
+                routeCoords.length > 0 &&
+                !routeWarning &&
+                !routeError && (
+                  <span>
+                    {routeMode === "safe"
+                      ? "🛡️ Sigurna ruta"
+                      : "⚡ Najkraca ruta"}
+                    : <strong>{routeFrom?.name}</strong> →{" "}
+                    <strong>{routeTo?.name}</strong>
+                  </span>
+                )}
               {routeWarning && <span>⚠️ {routeWarning}</span>}
               {routeError && <span>❌ {routeError}</span>}
-              <button className="route-clear-btn" onClick={clearRoute}>✕ Obriši rutu</button>
+              <button className="route-clear-btn" onClick={clearRoute}>
+                ✕ Obrisi rutu
+              </button>
+            </div>
+          )}
+
+          {travelTimes && (
+            <div
+              style={{
+                display: "flex",
+                background: "var(--color-background-primary, #fff)",
+                border: "0.5px solid rgba(0,0,0,0.12)",
+                borderRadius: 12,
+                overflow: "hidden",
+                margin: "0 12px 8px",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+              }}
+            >
+              {[
+                { icon: "🚶", label: "Peske", key: "foot" },
+                { icon: "🚲", label: "Bicikl", key: "bike" },
+                { icon: "🚗", label: "Auto", key: "car" },
+              ].map(({ icon, label, key }, i, arr) => (
+                <div
+                  key={key}
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "10px 14px",
+                    borderRight:
+                      i < arr.length - 1
+                        ? "0.5px solid rgba(0,0,0,0.1)"
+                        : "none",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 8,
+                      background: "rgba(0,0,0,0.04)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 18,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {icon}
+                  </div>
+                  <div
+                    style={{ display: "flex", flexDirection: "column", gap: 1 }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 11,
+                        color: "#888",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.04em",
+                      }}
+                    >
+                      {label}
+                    </span>
+                    <span style={{ fontSize: 15, fontWeight: 500 }}>
+                      {formatDuration(travelTimes[key].duration)}
+                    </span>
+                    <span style={{ fontSize: 12, color: "#888" }}>
+                      {formatDistance(travelTimes[key].distance)}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
@@ -633,17 +967,24 @@ function App() {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
-            {routeCoords.length > 0 &&
+            {routeMode === "safe" &&
+              routeCoords.length > 0 &&
               badLocations.map((loc) => (
                 <Circle
                   key={`zone-${loc.id}`}
                   center={[loc.lat, loc.lng]}
                   radius={250}
-                  pathOptions={{ color: "#ef4444", fillColor: "#ef4444", fillOpacity: 0.08, weight: 1, dashArray: "6, 4" }}
+                  pathOptions={{
+                    color: "#ef4444",
+                    fillColor: "#ef4444",
+                    fillOpacity: 0.08,
+                    weight: 1,
+                    dashArray: "6, 4",
+                  }}
                 />
               ))}
 
-            <RouteLayer routeCoords={routeCoords} safe={routeSafe} />
+            <RouteLayer routeCoords={routeCoords} routeMode={routeMode} />
 
             {filteredLocations.map((loc) => (
               <Marker
@@ -660,38 +1001,60 @@ function App() {
                     }
 
                     setSelectedLocationId(loc.id);
-                  }
+                  },
                 }}
               >
                 {directionsMode !== "selectB" && (
                   <Popup>
                     <div className="popup-card">
+                      <ImageSlider
+                        key={loc.id}
+                        images={imagesByLocation[String(loc.id)] || []}
+                        loading={loadingImages[String(loc.id)]}
+                      />
+
                       <h3>{loc.name}</h3>
                       <p>{loc.description}</p>
 
                       <div className="popup-rating-block">
                         <p className="popup-average">
-                          Prosječna ocjena:{" "}
-                          {loc.averageRating ? loc.averageRating.toFixed(1) : "0"}
+                          Prosecna ocena:{" "}
+                          {loc.averageRating
+                            ? loc.averageRating.toFixed(1)
+                            : "0"}
                         </p>
                         {ratingsByLocation[loc.id] && (
                           <>
                             <div className="popup-rating-summary">
                               <div className="popup-rating-summary-item">
                                 <span>Udaljenost</span>
-                                <strong>{ratingsByLocation[loc.id].averageDistance.toFixed(1)}</strong>
+                                <strong>
+                                  {ratingsByLocation[
+                                    loc.id
+                                  ].averageDistance.toFixed(1)}
+                                </strong>
                               </div>
                               <div className="popup-rating-summary-item">
-                                <span>Čistoća</span>
-                                <strong>{ratingsByLocation[loc.id].averageCleanliness.toFixed(1)}</strong>
+                                <span>Cistoca</span>
+                                <strong>
+                                  {ratingsByLocation[
+                                    loc.id
+                                  ].averageCleanliness.toFixed(1)}
+                                </strong>
                               </div>
                               <div className="popup-rating-summary-item">
-                                <span>Zelena površina</span>
-                                <strong>{ratingsByLocation[loc.id].averageGreenArea.toFixed(1)}</strong>
+                                <span>Zelena povrsina</span>
+                                <strong>
+                                  {ratingsByLocation[
+                                    loc.id
+                                  ].averageGreenArea.toFixed(1)}
+                                </strong>
                               </div>
                             </div>
                             {ratingsByLocation[loc.id].count > 0 && (
-                              <p className="popup-rating-count">Broj ocjena: {ratingsByLocation[loc.id].count}</p>
+                              <p className="popup-rating-count">
+                                Broj ocena: {ratingsByLocation[loc.id].count}
+                              </p>
                             )}
                           </>
                         )}
@@ -706,7 +1069,8 @@ function App() {
                             style={{ display: "none" }}
                           />
                           <span className="popup-file-btn">
-                            📎 {selectedFile ? selectedFile.name : "Izaberi sliku"}
+                            📎{" "}
+                            {selectedFile ? selectedFile.name : "Izaberi sliku"}
                           </span>
                         </label>
                         {selectedFile && (
@@ -721,7 +1085,9 @@ function App() {
 
                       {username ? (
                         ratedLocations.includes(loc.id) ? (
-                          <p className="popup-note rated-note">✓ Već ste ostavili recenziju.</p>
+                          <p className="popup-note rated-note">
+                            ✓ Vec ste ostavili recenziju.
+                          </p>
                         ) : (
                           <RatingWidget
                             locationId={loc.id}
@@ -730,48 +1096,65 @@ function App() {
                           />
                         )
                       ) : (
-                        <p className="popup-note">(Morate biti prijavljeni da biste ocijenili lokaciju)</p>
+                        <p className="popup-note">
+                          (Morate biti prijavljeni da biste ocenili lokaciju)
+                        </p>
                       )}
 
                       <hr style={{ margin: "8px 0" }} />
 
                       <div className="popup-actions">
-                        <button className="directions-btn" onClick={() => handleDirectionsClick(loc)}>
+                        <div className="route-mode-selector">
+                          <div className="route-mode-toggle">
+                            <button
+                              className={`toggle-track ${routeMode === "safe" ? "on" : ""}`}
+                              onClick={() =>
+                                setRouteMode(
+                                  routeMode === "safe" ? "shortest" : "safe",
+                                )
+                              }
+                              aria-label="Prebaci tip rute"
+                            >
+                              <span className="toggle-thumb" />
+                            </button>
+                            <span className="toggle-text">
+                              {routeMode === "safe"
+                                ? "🛡️ Sigurna ruta"
+                                : "⚡ Najkraca ruta"}
+                            </span>
+                          </div>
+                        </div>
+
+                        <button
+                          className="directions-btn"
+                          onClick={() => handleDirectionsClick(loc)}
+                        >
                           Directions
                         </button>
                         {routeFrom && routeFrom.id !== loc.id && (
                           <div className="popup-route-link">
                             ili{" "}
-                            <span className="directions-link" onClick={() => handleSelectB(loc)}>
-                              postavi kao odredište od "{routeFrom.name}"
+                            <span
+                              className="directions-link"
+                              onClick={() => handleSelectB(loc)}
+                            >
+                              postavi kao odrediste od "{routeFrom.name}"
                             </span>
                           </div>
                         )}
-                        <button className="recommend-btn" onClick={() => setRecommendLocation_loc(loc)}>
-                          Preporuči prijatelju
+                        <button
+                          className="recommend-btn"
+                          onClick={() => setRecommendLocation_loc(loc)}
+                        >
+                          Preporuci prijatelju
                         </button>
                         {role === "ADMIN" && (
-                          <button className="delete-btn" onClick={() => handleDeleteLocation(loc.id)}>
-                            🗑 Obriši lokaciju
+                          <button
+                            className="delete-btn"
+                            onClick={() => handleDeleteLocation(loc.id)}
+                          >
+                            🗑 Obrisi lokaciju
                           </button>
-                        )}
-                      </div>
-
-                      <div className="popup-image-grid">
-                        {loadingImages[String(loc.id)] ? (
-                          <p>Učitavanje slika...</p>
-                        ) : (imagesByLocation[String(loc.id)] || []).length > 0 ? (
-                          (imagesByLocation[String(loc.id)] || []).map((img) => (
-                            <img
-                              key={img.id}
-                              src={img.imageUrl}
-                              alt="location"
-                              className="popup-thumb"
-                              loading="lazy"
-                            />
-                          ))
-                        ) : (
-                          <p className="popup-no-images">Nema slika za ovu lokaciju</p>
                         )}
                       </div>
                     </div>
@@ -792,7 +1175,10 @@ function App() {
           )}
 
           {showNotificationsPanel && (
-            <NotificationsPanel onClose={() => setShowNotificationsPanel(false)} />
+            <NotificationsPanel
+              onClose={() => setShowNotificationsPanel(false)}
+              onUnreadChange={(count) => setUnreadCount(count)}
+            />
           )}
 
           <AddLocationModal
@@ -804,11 +1190,16 @@ function App() {
             }}
             onSave={(newLocation) => {
               if (!newLocation.name || !selectedPosition) {
-                toast.error("Greška: nedostaje lokacija ili naziv.");
+                toast.error("Greska: nedostaje lokacija ili naziv.");
                 return;
               }
-              if (newLocation.visibility === "PRIVATE" && !localStorage.getItem("token")) {
-                toast.error("Morate biti prijavljeni da biste kreirali privatnu lokaciju.");
+              if (
+                newLocation.visibility === "PRIVATE" &&
+                !localStorage.getItem("token")
+              ) {
+                toast.error(
+                  "Morate biti prijavljeni da biste kreirali privatnu lokaciju.",
+                );
                 return;
               }
               const locationToSend = {
@@ -820,18 +1211,20 @@ function App() {
               };
               addLocation(locationToSend)
                 .then((res) => {
-                  if (!res.ok) throw new Error("Greška pri dodavanju lokacije");
+                  if (!res.ok) throw new Error("Greska pri dodavanju lokacije");
                   return res.json();
                 })
                 .then(() => {
                   setIsOpen(false);
                   setSelectedPosition(null);
                   loadLocationsWithRatings();
-                  toast.success("Lokacija je poslata i biće prikazana nakon odobrenja ili odmah ako je javna.");
+                  toast.success(
+                    "Lokacija je poslata i bice prikazana nakon odobrenja ili odmah ako je javna.",
+                  );
                 })
                 .catch((err) => {
                   console.error(err);
-                  toast.error(err.message || "Greška pri dodavanju lokacije.");
+                  toast.error(err.message || "Greska pri dodavanju lokacije.");
                 });
             }}
           />
@@ -852,7 +1245,9 @@ function App() {
           <RegisterModal
             open={showRegister}
             onClose={() => setShowRegister(false)}
-            onRegister={(user) => register(user.username, user.email, user.password)}
+            onRegister={(user) =>
+              register(user.username, user.email, user.password)
+            }
             onSwitchToLogin={() => {
               setShowRegister(false);
               setShowLogin(true);
