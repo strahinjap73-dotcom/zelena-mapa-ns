@@ -1,6 +1,7 @@
 package com.example.zelenamapabackend;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -139,15 +140,27 @@ public class ZelenaMapaKontroler {
 
     
     @PostMapping("/friend-requests/{receiverId}")
-    public FriendRequest sendFriendRequest(@PathVariable Long receiverId, java.security.Principal principal) {
-        if (principal == null) throw new RuntimeException("Morate biti prijavljeni");
-        return service.sendFriendRequest(principal.getName(), receiverId);
+    public ResponseEntity<?> sendFriendRequest(@PathVariable Long receiverId, java.security.Principal principal) {
+        if (principal == null) return ResponseEntity.status(401).body("Morate biti prijavljeni");
+        try {
+            FriendRequest result = service.sendFriendRequest(principal.getName(), receiverId);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            e.printStackTrace(); // loguje u konzolu
+            return ResponseEntity.status(500).body(e.getMessage() + " | cause: " + (e.getCause() != null ? e.getCause().getMessage() : "null"));
+        }
     }
 
     @GetMapping("/friend-requests/pending")
-    public List<FriendRequest> getPendingRequests(java.security.Principal principal) {
-        if (principal == null) throw new RuntimeException("Morate biti prijavljeni");
-        return service.getPendingRequests(principal.getName());
+    public ResponseEntity<?> getPendingRequests(java.security.Principal principal) {
+        if (principal == null) return ResponseEntity.status(401).body("Morate biti prijavljeni");
+        try {
+            List<FriendRequest> result = service.getPendingRequests(principal.getName());
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(e.getMessage() + " | cause: " + (e.getCause() != null ? e.getCause().getMessage() : "null"));
+        }
     }
 
     @PutMapping("/friend-requests/{id}/accept")
