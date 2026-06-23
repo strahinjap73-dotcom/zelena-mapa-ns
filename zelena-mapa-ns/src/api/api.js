@@ -192,3 +192,11 @@ export const markNotificationRead = async (id) => {
   if (!res.ok) throw new Error('Failed to mark read');
   return res.json();
 };
+
+export const deleteImage = async (imageId) => {
+  const res = await fetch(`${BASE_URL}/api/images/${imageId}`, {
+    method: "DELETE",
+    headers: authHeader(),
+  });
+  if (!res.ok) throw new Error("Delete image failed");
+};

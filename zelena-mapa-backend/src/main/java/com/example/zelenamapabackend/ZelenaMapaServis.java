@@ -79,29 +79,33 @@ public class ZelenaMapaServis {
 
     // ➕ ADD LOCATION
     public Location addLocation(Location location, String userEmail) {
-        Location newLocation = new Location();
+   	 Location newLocation = new Location();
 
-        newLocation.setName(location.getName());
-        newLocation.setDescription(location.getDescription());
-        newLocation.setLat(location.getLat());
-        newLocation.setLng(location.getLng());
-        newLocation.setPrivateLocation(location.isPrivateLocation());
-        newLocation.setStatus("APPROVED");
+ 	 newLocation.setName(location.getName());
+	 newLocation.setDescription(location.getDescription());
+ 	 newLocation.setLat(location.getLat());
+    	newLocation.setLng(location.getLng());
+    	newLocation.setPrivateLocation(location.isPrivateLocation());
 
-        if (location.isPrivateLocation()) {
-            if (userEmail == null) {
-                throw new RuntimeException("Morate biti prijavljeni da biste kreirali privatnu lokaciju");
-            }
-            User owner = userRepo.findByEmail(userEmail)
-                    .orElseThrow(() -> new RuntimeException("Korisnik nije pronađen"));
-            newLocation.setOwner(owner);
-        } else if (userEmail != null) {
-            User owner = userRepo.findByEmail(userEmail).orElse(null);
-            newLocation.setOwner(owner);
-        }
+    	// Privatne lokacije su odmah approved, javne čekaju admin odobrenje
+    	if (location.isPrivateLocation()) {
+      	  newLocation.setStatus("APPROVED");
+      	  if (userEmail == null) {
+       	     throw new RuntimeException("Morate biti prijavljeni da biste kreirali privatnu lokaciju");
+       	 }
+       	 User owner = userRepo.findByEmail(userEmail)
+       	         .orElseThrow(() -> new RuntimeException("Korisnik nije pronađen"));
+       	 newLocation.setOwner(owner);
+    	} else {
+     	   newLocation.setStatus("PENDING");
+     	   if (userEmail != null) {
+      	      User owner = userRepo.findByEmail(userEmail).orElse(null);
+      	      newLocation.setOwner(owner);
+      	  }
+   	 }
 
-        return locationRepo.save(newLocation);
-    }
+   	 return locationRepo.save(newLocation);
+     }
 
     // ❌ DELETE LOCATION
     public void deleteLocation(Long id) {
