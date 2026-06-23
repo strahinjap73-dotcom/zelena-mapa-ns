@@ -1,29 +1,15 @@
 import { useState, useEffect } from "react";
 
-const STORAGE_KEY = "zelena_mapa_reports";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL
+  ? import.meta.env.VITE_API_BASE_URL
+  : window.location.hostname === "localhost"
+    ? "http://localhost:8080"
+    : "https://zelena-mapa-ns.onrender.com";
 
-export function getReports() {
-  return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-}
-
-export function saveReport(report) {
-  const reports = getReports();
-  const newReport = {
-    id: Date.now(),
-    ...report,
-    status: "novo",
-    createdAt: new Date().toISOString(),
-  };
-  reports.unshift(newReport);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
-  return newReport;
-}
-
-export function updateReportStatus(id, status) {
-  const reports = getReports();
-  const updated = reports.map((r) => (r.id === id ? { ...r, status } : r));
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-}
+const authHeader = () => {
+  const token = localStorage.getItem("token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
 
 const STATUS_LABELS = {
   novo: { label: "Novo", color: "#e76f51" },
@@ -39,40 +25,66 @@ const CATEGORIES = [
   "Ostalo",
 ];
 
+async function submitReport(category, description) {
+  const res = await fetch(`${BASE_URL}/api/reports`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeader(),
+    },
+    body: JSON.stringify({ category, description }),
+  });
+  if (!res.ok) throw new Error("Greška pri slanju prijave");
+  return res.json();
+}
+
+async function fetchMyReports() {
+  const res = await fetch(`${BASE_URL}/api/reports/mine`, {
+    headers: authHeader(),
+  });
+  if (!res.ok) return [];
+  return res.json();
+}
+
 function ReportModal({ open, onClose, username }) {
-  const [tab, setTab] = useState("new"); // "new" | "list"
+  const [tab, setTab] = useState("new");
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [description, setDescription] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (open) {
-      setReports(getReports());
       setSubmitted(false);
       setDescription("");
       setCategory(CATEGORIES[0]);
+      setError("");
     }
   }, [open]);
 
+  useEffect(() => {
+    if (open && tab === "list") {
+      fetchMyReports().then(setReports);
+    }
+  }, [open, tab]);
+
   if (!open) return null;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!description.trim()) return;
-    saveReport({
-      category,
-      description: description.trim(),
-      username: username || "Anonimno",
-    });
-    setSubmitted(true);
-    setReports(getReports());
-    // Trigger storage event for AdminPanel
-    window.dispatchEvent(new Event("reports-updated"));
+    setLoading(true);
+    setError("");
+    try {
+      await submitReport(category, description.trim());
+      setSubmitted(true);
+    } catch (e) {
+      setError("Greška pri slanju prijave. Pokušajte ponovo.");
+    } finally {
+      setLoading(false);
+    }
   };
-
-  const userReports = reports.filter(
-    (r) => r.username === (username || "Anonimno")
-  );
 
   return (
     <div className="overlay" onClick={onClose}>
@@ -88,9 +100,9 @@ function ReportModal({ open, onClose, username }) {
           </button>
           <button
             className={tab === "list" ? "report-tab active" : "report-tab"}
-            onClick={() => { setTab("list"); setReports(getReports()); }}
+            onClick={() => setTab("list")}
           >
-            Moje prijave ({userReports.length})
+            Moje prijave
           </button>
         </div>
 
@@ -126,14 +138,16 @@ function ReportModal({ open, onClose, username }) {
                   rows={4}
                 />
 
+                {error && <p style={{ color: "#e63946", fontSize: "0.85rem" }}>{error}</p>}
+
                 <div className="modal-actions">
                   <button className="btn-cancel" onClick={onClose}>Odustani</button>
                   <button
                     className="btn-confirm"
                     onClick={handleSubmit}
-                    disabled={!description.trim()}
+                    disabled={!description.trim() || loading}
                   >
-                    Pošalji prijavu
+                    {loading ? "Slanje..." : "Pošalji prijavu"}
                   </button>
                 </div>
               </>
@@ -143,10 +157,10 @@ function ReportModal({ open, onClose, username }) {
 
         {tab === "list" && (
           <div className="report-list">
-            {userReports.length === 0 ? (
+            {reports.length === 0 ? (
               <p className="report-empty">Nemate prijavljenih problema.</p>
             ) : (
-              userReports.map((r) => (
+              reports.map((r) => (
                 <div key={r.id} className="report-item">
                   <div className="report-item-header">
                     <span className="report-category">{r.category}</span>
@@ -154,7 +168,7 @@ function ReportModal({ open, onClose, username }) {
                       className="report-status"
                       style={{ background: STATUS_LABELS[r.status]?.color }}
                     >
-                      {STATUS_LABELS[r.status]?.label}
+                      {STATUS_LABELS[r.status]?.label || r.status}
                     </span>
                   </div>
                   <p className="report-desc">{r.description}</p>
