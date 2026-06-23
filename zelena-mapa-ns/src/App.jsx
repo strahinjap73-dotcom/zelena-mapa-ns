@@ -40,6 +40,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { toast } from "react-toastify";
 import RecommendModal from "./components/RecommendModal";
 import ImageSlider from "./components/ImageSlider";
+import ReportModal from "./components/ReportModal";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -387,6 +388,7 @@ function App() {
   const [routeLoading, setRouteLoading] = useState(false);
   const [routeError, setRouteError] = useState(null);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showReport, setShowReport] = useState(false);
   const [showUsersPanel, setShowUsersPanel] = useState(false);
   const [showNotificationsPanel, setShowNotificationsPanel] = useState(false);
   const [showFriendRequests, setShowFriendRequests] = useState(false);
@@ -828,6 +830,13 @@ function App() {
                   </>
                 ) : (
                   <>
+                    <button
+                      className="hb-icon-btn"
+                      title="Prijavi problem"
+                      onClick={() => setShowReport(true)}
+                    >
+                      ⚠
+                     </button>
                     <button
                       className="hb-login-btn"
                       onClick={() => setShowLogin(true)}
@@ -1338,7 +1347,11 @@ function App() {
             onConfirm={confirmModal.onConfirm}
             onCancel={closeConfirm}
           />
-
+          <ReportModal
+            open={showReport}
+            onClose={() => setShowReport(false)}
+            username={username}
+          />
           <ToastContainer />
         </div>
       )}
