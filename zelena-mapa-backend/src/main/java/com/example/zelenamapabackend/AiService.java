@@ -10,13 +10,6 @@ import java.util.List;
 @Service
 public class AiService {
 
-    @Repository
-    public interface LocationRepository
-            extends JpaRepository<Location, Long> {
-
-    }
-
-
     private final LocationRepository locationRepository;
 
 
@@ -43,7 +36,6 @@ public class AiService {
     
     Naziv: %s
     Opis: %s
-    Tip: %s
     
     """.formatted(
                     location.getName(),
