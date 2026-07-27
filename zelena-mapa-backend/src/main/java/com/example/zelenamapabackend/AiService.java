@@ -17,8 +17,7 @@ public class AiService {
             this.locationRepository = locationRepository;
     }
 
-    @Value("${openai.api.key}")
-    private String apiKey;
+    
 
 
     public String recommend(String question) {
