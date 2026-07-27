@@ -428,6 +428,9 @@ const [editForm, setEditForm] = useState({
     cancelText: "Otkazi",
   });
 
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState("");
+
   const showConfirm = (options) => {
     setConfirmModal({
       ...confirmModal,
@@ -745,6 +748,31 @@ const [editForm, setEditForm] = useState({
     });
   };
 
+  const askAI = async () => {
+
+    try {
+
+        const response = await fetch(
+            "https://zelena-mapa-ns.onrender.com/api/ai/recommend",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    question: question
+                })
+            }
+        );
+
+        const data = await response.json();
+        setAnswer(data.answer);
+    } catch (e) {
+        console.log(e);
+    } 
+
+}
+
   return (
     <>
       {loading ? (
@@ -876,6 +904,21 @@ const [editForm, setEditForm] = useState({
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
+                <input
+    type="text"
+    placeholder="Npr. Želim mirno mesto za šetnju sa decom"
+    value={question}
+    onChange={(e) => setQuestion(e.target.value)}
+/>
+<button onClick={askAI}>
+    Preporuči lokaciju
+</button>
+{answer && (
+    <div>
+        <h3>AI preporuka</h3>
+        <p>{answer}</p>
+    </div>
+)}
               </div>
             </div>
 
