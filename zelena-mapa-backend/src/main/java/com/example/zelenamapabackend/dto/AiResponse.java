@@ -1,14 +1,18 @@
-package com.example.zelenamapabackend.dto;
+package com.example.zelenamapabackend;
 
 public class AiResponse {
 
+
     private String answer;
 
-    public AiResponse(String answer){
+
+    public AiResponse(String answer) {
         this.answer = answer;
     }
 
-    public String getAnswer(){
+
+    public String getAnswer() {
         return answer;
     }
+
 }
