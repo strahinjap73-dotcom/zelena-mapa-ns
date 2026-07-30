@@ -1,4 +1,4 @@
-package com.example.zelenamapabackend;
+package com.example.zelenamapabackend.dto;
 
 public class AiRequest {
 
